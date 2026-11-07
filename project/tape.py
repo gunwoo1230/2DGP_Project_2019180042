@@ -54,6 +54,10 @@ class TapePickupFx:
         self.y = self.start_y + (self.head_y - self.start_y) * p
 
     def draw(self):
+        # 떠오른 뒤 머리 위에 있는 동안 테이프 뒤에서 반짝임
+        sparkle_time = self.time - config.FX_RISE_TIME
+        if 0 <= sparkle_time < config.FX_SPARKLE_TIME:
+            draw_item(TapePickupFx.image, 'sparkle', sparkle_time * config.FX_SPARKLE_FPS, self.x, self.y)
         draw_item(TapePickupFx.image, 'tape', 0, self.x, self.y, scale=self.scale)
 
     def get_bb(self):
