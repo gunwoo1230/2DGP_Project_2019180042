@@ -178,6 +178,7 @@ class Box:
         self.frame = 0
         self.charge_time = 0.0
         self.vx, self.vy = 0.0, 0.0
+        self.near_tape = None   # 지금 겹쳐 있는 테이프
         self.on_accel_ground = False    # 가속 지형 위 여부 (1주차엔 항상 False)
         self.state_machine = StateMachine(self, Idle, {
             Idle: [(space_down, Charge), (is_moving, Walk)],
@@ -187,6 +188,7 @@ class Box:
         })
 
     def update(self):
+        self.near_tape = None   # 이번 프레임의 충돌 처리에서 다시 기록됨
         self.state_machine.update()
 
     def draw(self):
@@ -243,4 +245,5 @@ class Box:
             self.face_dir = self.dir
 
     def handle_collision(self, group, other):
-        pass
+        if group == 'box:tape':
+            self.near_tape = other
