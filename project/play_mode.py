@@ -15,7 +15,8 @@ def toggle_zone():
 
 
 def init():
-    global hud, zone, box
+    global hud, zone, box, show_collision_boxes
+    show_collision_boxes = False
     zone = 'chase'
     hud = Hud()
     game_world.add_object(hud, game_world.LAYER_HUD)
@@ -38,10 +39,13 @@ def update():
 def draw():
     clear_canvas()
     game_world.draw()
+    if show_collision_boxes:
+        game_world.draw_collision_boxes()
     update_canvas()
 
 
 def handle_events():
+    global show_collision_boxes
     for event in get_events():
         if event.type == SDL_QUIT:
             game_framework.quit()
@@ -49,5 +53,7 @@ def handle_events():
             game_framework.quit()
         elif event.type == SDL_KEYDOWN and event.key == SDLK_b:
             toggle_zone()
+        elif event.type == SDL_KEYDOWN and event.key == SDLK_F1:
+            show_collision_boxes = not show_collision_boxes
         else:
             box.handle_event(event)

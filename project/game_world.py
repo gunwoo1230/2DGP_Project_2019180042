@@ -1,4 +1,5 @@
 # 게임 월드: 레이어별 객체 목록과 충돌 처리
+from pico2d import draw_rectangle
 
 # 그리기 레이어 (아래부터)
 LAYER_HUD, LAYER_GROUND, LAYER_ITEM, LAYER_BOX, LAYER_FX = range(5)
@@ -53,6 +54,17 @@ def add_collision_pair(group, a, b):
         pair[0].append(a)
     if b:
         pair[1].append(b)
+
+
+def draw_collision_boxes():
+    # 충돌 쌍에 등록된 객체의 충돌 박스를 그림
+    drawn = []
+    for pair in collision_pairs.values():
+        for group in pair:
+            for obj in group:
+                if obj not in drawn:
+                    draw_rectangle(*obj.get_bb())
+                    drawn.append(obj)
 
 
 def collide(a, b):
