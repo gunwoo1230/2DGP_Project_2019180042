@@ -17,7 +17,7 @@ class Dummy:
             Dummy.image = load_image('resource/placeholder/ph_dummy.png')
             Dummy.font = load_font('resource/font/Gaegu-Bold.ttf', config.DUMMY_FONT_SIZE)
         self.x = config.DUMMY_X
-        self.y = config.GROUND_Y + config.DUMMY_H / 2   # 그림의 가운데
+        self.y = config.ROAD_Y + config.DUMMY_H / 2   # 그림의 가운데
         self.hit_count = 0
         self.shake_time = 0.0   # 남은 흔들림 시간
 

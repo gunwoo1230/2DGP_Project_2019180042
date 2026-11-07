@@ -146,8 +146,8 @@ class Jump:
         # 프레임 속도와 상관없이 같은 높이가 되도록 등가속도 공식으로 계산
         box.y += box.vy * dt - 0.5 * config.GRAVITY * dt * dt
         box.vy -= config.GRAVITY * dt
-        if box.y <= config.GROUND_Y:
-            box.y = config.GROUND_Y
+        if box.y <= config.ROAD_Y:
+            box.y = config.ROAD_Y
             box.vy = 0
             box.state_machine.handle_event(('DONE', None))
 
@@ -249,7 +249,7 @@ class Box:
         self.sheet = load_image('resource/box_sheet.png')
         self.hud = hud
         self.zone = 'chase'
-        self.x, self.y = config.BOX_START_X, config.GROUND_Y    # 발 위치
+        self.x, self.y = config.BOX_START_X, config.ROAD_Y    # 발 위치
         self.left_down, self.right_down = False, False
         self.last_dir = 0       # 마지막에 누른 방향
         self.dir = 0            # 지금 이동할 방향 (-1, 0, 1)
@@ -271,7 +271,7 @@ class Box:
 
     def reset(self):
         # 위치·상태를 처음으로 (키 눌림 상태와 구간은 유지)
-        self.x, self.y = config.BOX_START_X, config.GROUND_Y
+        self.x, self.y = config.BOX_START_X, config.ROAD_Y
         self.vx, self.vy = 0.0, 0.0
         self.face_dir = self.dir if self.dir != 0 else 1
         self.near_tape = None

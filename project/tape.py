@@ -19,7 +19,7 @@ class TapeItem:
         if TapeItem.image is None:
             TapeItem.image = load_image('resource/item_sheet.png')
         self.x = x
-        self.y = config.GROUND_Y + TAPE_H / 2   # 그림의 가운데
+        self.y = config.ROAD_Y + TAPE_H / 2   # 그림의 가운데
         self.bob_time = 0.0
 
     def update(self):

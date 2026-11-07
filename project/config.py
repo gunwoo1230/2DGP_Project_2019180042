@@ -4,7 +4,7 @@
 SCREEN_W, SCREEN_H = 1600, 900
 PLAY_LEFT, PLAY_RIGHT = 20, 1580        # 플레이 칸 좌우
 PLAY_BOTTOM, PLAY_TOP = 110, 810        # 플레이 칸 아래·위
-GROUND_Y = 210                          # 테스트 바닥 (도로 높이)
+ROAD_Y = 210                            # 도로 높이
 SPRITE_SCALE = 0.6                      # 스프라이트 그리기 배율
 
 # 박스 이동
