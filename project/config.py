@@ -15,6 +15,7 @@ CHARGE_MAX_TIME = 0.6                   # 초
 CHARGE_SPEED_RATE = 0.4                 # 차지 중 이동 속도 배율
 CHARGE_SQUASH_X, CHARGE_SQUASH_Y = 0.20, 0.25   # 최대 차지 때 가로로 늘고 세로로 주는 비율
 JUMP_MIN_H, JUMP_MAX_H = 48, 150        # px
+JUMP_APEX_VY = 120                      # 상승 중 vy가 이 값 이하면 정점 그림 시작 (px/s)
 GRAVITY = 2400                          # px/s²
 AIR_ACCEL = 1080                        # px/s²
 BOX_BB_W, BOX_BB_H = 86, 66             # 충돌 박스
