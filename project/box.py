@@ -40,8 +40,16 @@ def shift_down(box, event):
     return event[0] == 'KEY' and event[1].type == SDL_KEYDOWN and event[1].key in (SDLK_LSHIFT, SDLK_RSHIFT)
 
 
+def shift_up(box, event):
+    return event[0] == 'KEY' and event[1].type == SDL_KEYUP and event[1].key in (SDLK_LSHIFT, SDLK_RSHIFT)
+
+
 def can_pick_tape(box, event):
     return shift_down(box, event) and box.zone == 'chase' and box.near_tape is not None and not box.hud.is_full()
+
+
+def can_slam(box, event):
+    return shift_down(box, event) and box.zone == 'boss'
 
 
 class Idle:
@@ -187,6 +195,24 @@ class Get:
         draw_box(box.sheet, 'get', frame, box.x, box.y)
 
 
+class Slam:
+    @staticmethod
+    def enter(box, event):
+        pass
+
+    @staticmethod
+    def exit(box, event):
+        pass
+
+    @staticmethod
+    def do(box):
+        pass
+
+    @staticmethod
+    def draw(box):
+        pass
+
+
 class Box:
     def __init__(self, hud):
         self.sheet = load_image('resource/box_sheet.png')
@@ -203,8 +229,9 @@ class Box:
         self.near_tape = None   # 지금 겹쳐 있는 테이프
         self.on_accel_ground = False    # 가속 지형 위 여부 (1주차엔 항상 False)
         self.state_machine = StateMachine(self, Idle, {
-            Idle: [(space_down, Charge), (can_pick_tape, Get), (is_moving, Walk)],
-            Walk: [(space_down, Charge), (can_pick_tape, Get), (is_stopped, Idle)],
+            Idle: [(space_down, Charge), (can_pick_tape, Get), (can_slam, Slam), (is_moving, Walk)],
+            Walk: [(space_down, Charge), (can_pick_tape, Get), (can_slam, Slam), (is_stopped, Idle)],
+            Slam: [(shift_up, Idle)],       # 임시 규칙: 돌진을 채울 때 교체
             Charge: [(space_up, Jump)],
             Jump: [(done_moving, Walk), (done_stopped, Idle)],
             Get: [(done_moving, Walk), (done_stopped, Idle)],
