@@ -4,6 +4,7 @@ from pico2d import load_image
 import config
 import font_data
 import game_framework
+from sprite_data import draw_item
 
 # 구간별 지금 칸 낱말
 NOW_WORDS = {'chase': ('낮', '주택가'), 'boss': ('저녁', '공원')}
@@ -15,6 +16,8 @@ class Hud:
     def __init__(self):
         self.frame = load_image('resource/diary_frame.png')
         self.font = load_image('resource/font_sheet.png')
+        self.items = load_image('resource/item_sheet.png')
+        self.lives = config.TAPE_START
         self.zone = 'chase'
         self.tip_index = 0
         self.tip_time = 0.0
@@ -45,10 +48,10 @@ class Hud:
         self.tip_time = 0.0
 
     def add_life(self):
-        pass
+        self.lives = min(self.lives + 1, config.TAPE_MAX)
 
     def is_full(self):
-        pass
+        return self.lives >= config.TAPE_MAX
 
     def draw_now(self):
         time_word, place_word = NOW_WORDS[self.zone]
@@ -65,4 +68,9 @@ class Hud:
         font_data.draw_tip(self.font, font_data.TIPS[tip_key], config.UI_TIP_X, config.UI_TIP_Y, count=count)
 
     def draw_lives(self):
-        pass
+        for i in range(config.TAPE_MAX):
+            alpha = 1 if i < self.lives else config.UI_LIFE_EMPTY_ALPHA
+            self.items.opacify(alpha)
+            draw_item(self.items, 'tape_ui', 0, config.UI_LIFE_X + config.UI_LIFE_GAP * i, config.UI_LIFE_Y, scale=1)
+        # 같은 시트의 다른 그림이 흐려지지 않도록 복구
+        self.items.opacify(1)
