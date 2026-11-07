@@ -2,11 +2,17 @@
 from pico2d import load_image
 
 import config
+import font_data
+
+# 구간별 지금 칸 낱말
+NOW_WORDS = {'chase': ('낮', '주택가'), 'boss': ('저녁', '공원')}
 
 
 class Hud:
     def __init__(self):
         self.frame = load_image('resource/diary_frame.png')
+        self.font = load_image('resource/font_sheet.png')
+        self.zone = 'chase'
 
     def update(self):
         pass
@@ -34,10 +40,13 @@ class Hud:
         pass
 
     def draw_now(self):
-        pass
+        time_word, place_word = NOW_WORDS[self.zone]
+        font_data.draw_now(self.font, time_word, place_word, config.UI_NOW_X, config.UI_HEADER_Y)
 
     def draw_time(self):
-        pass
+        # 1주차는 0일 0시간 0분 고정 (시계는 3주차)
+        for x in (config.UI_DAY_X, config.UI_HOUR_X, config.UI_MIN_X):
+            font_data.draw_number(self.font, 0, x, config.UI_HEADER_Y)
 
     def draw_tip(self):
         pass
