@@ -3,6 +3,7 @@ from pico2d import load_image
 
 import config
 import font_data
+import game_framework
 
 # 구간별 지금 칸 낱말
 NOW_WORDS = {'chase': ('낮', '주택가'), 'boss': ('저녁', '공원')}
@@ -13,9 +14,14 @@ class Hud:
         self.frame = load_image('resource/diary_frame.png')
         self.font = load_image('resource/font_sheet.png')
         self.zone = 'chase'
+        self.tip_index = 0
+        self.tip_time = 0.0
 
     def update(self):
-        pass
+        self.tip_time += game_framework.frame_time
+        if self.tip_time >= config.TIP_INTERVAL:
+            self.tip_time -= config.TIP_INTERVAL
+            self.tip_index = (self.tip_index + 1) % len(font_data.TIP_LIST['day'])
 
     def draw(self):
         self.frame.draw(config.SCREEN_W / 2, config.SCREEN_H / 2)
@@ -49,8 +55,9 @@ class Hud:
             font_data.draw_number(self.font, 0, x, config.UI_HEADER_Y)
 
     def draw_tip(self):
-        tip_key = font_data.TIP_LIST['day'][0]
-        font_data.draw_tip(self.font, font_data.TIPS[tip_key], config.UI_TIP_X, config.UI_TIP_Y)
+        tip_key = font_data.TIP_LIST['day'][self.tip_index]
+        count = int(self.tip_time / config.TIP_CHAR_TIME)      # 지금까지 써진 글자 수
+        font_data.draw_tip(self.font, font_data.TIPS[tip_key], config.UI_TIP_X, config.UI_TIP_Y, count=count)
 
     def draw_lives(self):
         pass
