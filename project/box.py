@@ -112,6 +112,7 @@ class Jump:
     def enter(box, event):
         height = config.JUMP_MIN_H + (config.JUMP_MAX_H - config.JUMP_MIN_H) * box.charge_ratio()
         box.vy = math.sqrt(2 * config.GRAVITY * height)
+        box.vx = box.dir * box.charge_speed()   # 시작 가로 속도 = 그때의 이동 속도
 
     @staticmethod
     def exit(box, event):
@@ -120,6 +121,13 @@ class Jump:
     @staticmethod
     def do(box):
         dt = game_framework.frame_time
+        # 공중 좌우 조작: 입력이 있으면 목표 속도로 천천히 변함, 없으면 유지
+        if box.dir != 0:
+            diff = box.dir * config.WALK_SPEED - box.vx
+            change = config.AIR_ACCEL * dt
+            box.vx += diff if abs(diff) <= change else math.copysign(change, diff)
+        box.x += box.vx * dt
+        box.clamp_x()
         # 프레임 속도와 상관없이 같은 높이가 되도록 등가속도 공식으로 계산
         box.y += box.vy * dt - 0.5 * config.GRAVITY * dt * dt
         box.vy -= config.GRAVITY * dt
@@ -143,7 +151,7 @@ class Box:
         self.face_dir = 1       # 바라보는 방향
         self.frame = 0
         self.charge_time = 0.0
-        self.vy = 0.0
+        self.vx, self.vy = 0.0, 0.0
         self.on_accel_ground = False    # 가속 지형 위 여부 (1주차엔 항상 False)
         self.state_machine = StateMachine(self, Idle, {
             Idle: [(space_down, Charge), (is_moving, Walk)],
