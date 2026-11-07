@@ -33,6 +33,12 @@ class Level:
             color = (255, 140, 0) if p.kind == 'accel' else (255, 0, 0)
             draw_line(camera.to_screen(p.x0), p.y0, camera.to_screen(p.x1), p.y1, *color)
 
+    def find_landing(self, prev_x, prev_y, x, y):
+        # 위에서 윗면을 지나 내려온 발판 중 가장 높은 것 (경사가 있어 각 위치의 윗면과 비교)
+        hits = [p for p in self.platforms
+                if p.covers(x) and prev_y >= p.surface_y(prev_x) and p.surface_y(x) > y]
+        return max(hits, key=lambda p: p.surface_y(x), default=None)
+
     def get_bb(self):
         pass
 

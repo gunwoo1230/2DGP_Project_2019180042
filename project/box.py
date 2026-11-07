@@ -137,6 +137,7 @@ class Jump:
     @staticmethod
     def do(box):
         dt = game_framework.frame_time
+        prev_x, prev_y = box.x, box.y
         # 공중 좌우 조작: 입력이 있으면 목표 속도로 천천히 변함, 없으면 유지
         if box.dir != 0:
             diff = box.dir * config.WALK_SPEED - box.vx
@@ -147,9 +148,12 @@ class Jump:
         # 프레임 속도와 상관없이 같은 높이가 되도록 등가속도 공식으로 계산
         box.y += box.vy * dt - 0.5 * config.GRAVITY * dt * dt
         box.vy -= config.GRAVITY * dt
-        if box.y <= config.ROAD_Y:
-            box.y = config.ROAD_Y
+        # 내려오는 중에만 밟힘 (아래에서 위로는 통과)
+        platform = box.level.find_landing(prev_x, prev_y, box.x, box.y) if box.vy <= 0 else None
+        if platform:
+            box.y = platform.surface_y(box.x)
             box.vy = 0
+            box.ground = platform
             box.state_machine.handle_event(('DONE', None))
 
     @staticmethod
@@ -259,6 +263,7 @@ class Box:
         self.frame = 0
         self.charge_time = 0.0
         self.vx, self.vy = 0.0, 0.0
+        self.ground = None      # 서 있는 발판
         self.near_tape = None   # 지금 겹쳐 있는 테이프
         self.slam_cooldown = 0.0
         self.on_accel_ground = False    # 가속 지형 위 여부 (1주차엔 항상 False)
@@ -275,6 +280,7 @@ class Box:
         # 위치·상태를 처음으로 (키 눌림 상태와 구간은 유지)
         self.x, self.y = config.BOX_START_X, config.ROAD_Y
         self.vx, self.vy = 0.0, 0.0
+        self.ground = None
         self.face_dir = self.dir if self.dir != 0 else 1
         self.near_tape = None
         self.slam_cooldown = 0.0
