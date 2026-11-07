@@ -31,6 +31,7 @@ class Background:
 
 class Hud:
     def __init__(self):
+        self.frame = load_image('resource/diary_frame.png')
         self.font = load_image('resource/font_sheet.png')
         self.items = load_image('resource/item_sheet.png')
         self.lives = config.TAPE_START
@@ -46,6 +47,7 @@ class Hud:
             self.tip_index = (self.tip_index + 1) % len(TIP_LISTS[self.zone])
 
     def draw(self):
+        self.draw_frame_strips()
         self.draw_now()
         self.draw_time()
         self.draw_tip()
@@ -79,6 +81,13 @@ class Hud:
 
     def is_full(self):
         return self.lives + self.reserved >= config.TAPE_MAX
+
+    def draw_frame_strips(self):
+        # 플레이 칸 밖으로 삐져나온 맵을 배경의 좌우 띠로 다시 덮음
+        w, h = config.FRAME_STRIP_W, config.FRAME_STRIP_TOP - config.FRAME_STRIP_BOTTOM
+        y = (config.FRAME_STRIP_BOTTOM + config.FRAME_STRIP_TOP) / 2
+        for left in (0, config.SCREEN_W - w):
+            self.frame.clip_draw(left, config.FRAME_STRIP_BOTTOM, w, h, left + w / 2, y)
 
     def draw_now(self):
         time_word, place_word = NOW_WORDS[self.zone]
