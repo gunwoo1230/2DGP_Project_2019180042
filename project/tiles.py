@@ -57,10 +57,20 @@ def load_images():
     # 리셋·재시작해도 한 번만 불러옴
     if not images:
         images['road'] = load_image('resource/placeholder/ph_ground.png')
+        images['wall'] = load_image('resource/placeholder/ph_wall.png')
+        images['deco'] = load_image('resource/placeholder/ph_pipe.png')
+
+
+def draw_rect(image, x0, y0, x1, y1):
+    image.draw((x0 + x1) / 2, (y0 + y1) / 2, x1 - x0, y1 - y0)
 
 
 def draw_tile(name, left):
     # 진짜 타일 그림이 오면 이 함수 안에서 한 장으로 교체
+    tile = TILES[name]
     screen_left = camera.to_screen(left)
-    road_h = ROAD_Y - config.PLAY_BOTTOM
-    images['road'].draw(screen_left + TILE_W / 2, config.PLAY_BOTTOM + road_h / 2, TILE_W, road_h)
+    draw_rect(images['road'], screen_left, config.PLAY_BOTTOM, screen_left + TILE_W, ROAD_Y)
+    for x0, x1 in tile['walls']:
+        draw_rect(images['wall'], screen_left + x0, ROAD_Y, screen_left + x1, ROOF_Y)
+    for _, x0, y0, x1, y1 in tile['deco']:
+        draw_rect(images['deco'], screen_left + x0, y0, screen_left + x1, y1)
