@@ -49,10 +49,11 @@ class TapePickupFx:
     def __init__(self, start_x, start_y, box, hud):
         if TapePickupFx.image is None:
             TapePickupFx.image = load_image('resource/item_sheet.png')
-        self.start_x, self.start_y = start_x, start_y
-        self.x, self.y = start_x, start_y
+        # 도착하는 생명 칸이 화면 좌표라서 연출 전체를 화면 좌표로 계산
+        self.start_x, self.start_y = camera.to_screen(start_x), start_y
+        self.x, self.y = self.start_x, self.start_y
         # 머리 위 도착 위치
-        self.head_x = box.x
+        self.head_x = camera.to_screen(box.x)
         self.head_y = box.y + config.BOX_BODY_H + config.FX_RISE_H
         # 날아갈 생명 칸은 생성할 때 정해 둠
         self.hud = hud
