@@ -26,6 +26,7 @@ TAPE_START, TAPE_MAX = 1, 5             # 생명
 TAPE_PICKUP_TIME = 0.5                  # 초
 TAPE_XS = (500, 900, 1300)              # 바닥 테이프 위치
 TAPE_BB_RATE = 0.8                      # 충돌 박스 = 그림 크기의 80%
+TAPE_BOB_H, TAPE_BOB_TIME = 4, 1        # 둥실 진폭(px), 주기(초)
 
 # 줍기 연출
 FX_RISE_TIME, FX_SPARKLE_TIME, FX_FLY_TIME = 0.25, 0.25, 0.35   # 초

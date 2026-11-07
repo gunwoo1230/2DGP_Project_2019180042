@@ -1,4 +1,6 @@
 # 테이프: 바닥 테이프와 줍기 연출
+import math
+
 from pico2d import load_image
 
 import config
@@ -18,12 +20,17 @@ class TapeItem:
             TapeItem.image = load_image('resource/item_sheet.png')
         self.x = x
         self.y = config.GROUND_Y + TAPE_H / 2   # 그림의 가운데
+        self.bob_time = 0.0
 
     def update(self):
-        pass
+        self.bob_time += game_framework.frame_time
+
+    def bob_offset(self):
+        # 둥실은 그림만 움직임 (충돌 박스는 그대로)
+        return config.TAPE_BOB_H * math.sin(2 * math.pi * self.bob_time / config.TAPE_BOB_TIME)
 
     def draw(self):
-        draw_item(TapeItem.image, 'tape', 0, self.x, self.y)
+        draw_item(TapeItem.image, 'tape', 0, self.x, self.y + self.bob_offset())
 
     def get_bb(self):
         half_w = TAPE_W * config.TAPE_BB_RATE / 2
