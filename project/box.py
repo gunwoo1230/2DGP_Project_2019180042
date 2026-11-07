@@ -29,6 +29,10 @@ def done_stopped(box, event):
     return event[0] == 'DONE' and box.dir == 0
 
 
+def is_air(box, event):
+    return event[0] == 'AIR'
+
+
 def space_down(box, event):
     return event[0] == 'KEY' and event[1].type == SDL_KEYDOWN and event[1].key == SDLK_SPACE
 
@@ -53,6 +57,7 @@ class Idle:
     @staticmethod
     def enter(box, event):
         box.frame = 0
+        box.vx = 0.0
 
     @staticmethod
     def exit(box, event):
@@ -84,7 +89,8 @@ class Walk:
     @staticmethod
     def do(box):
         dt = game_framework.frame_time
-        box.x += box.dir * config.WALK_SPEED * dt
+        box.vx = box.dir * config.WALK_SPEED
+        box.x += box.vx * dt
         box.clamp_x()
         box.frame = (box.frame + config.ANIM_FPS_MOVE * dt) % Walk.FRAMES
         box.walk_time += dt
@@ -112,7 +118,8 @@ class Charge:
     def do(box):
         dt = game_framework.frame_time
         box.charge_time += dt
-        box.x += box.dir * box.charge_speed() * dt
+        box.vx = box.dir * box.charge_speed()
+        box.x += box.vx * dt
         box.clamp_x()
 
     @staticmethod
@@ -178,6 +185,7 @@ class Get:
     @staticmethod
     def enter(box, event):
         box.get_time = 0.0
+        box.vx = 0.0
         tape = box.near_tape
         game_world.remove_object(tape)
         box.near_tape = None
@@ -204,6 +212,7 @@ class Slam:
     @staticmethod
     def enter(box, event):
         box.slam_time = 0.0
+        box.vx = 0.0
         box.slam_start_x = box.x
         box.slam_dir = box.face_dir
         box.slam_returning = False  # 돌아오는 중에는 맞지 않아서 돌진 한 번에 1회만 맞음
@@ -253,6 +262,9 @@ class Slam:
                      sx=config.SLAM_SX, sy=config.SLAM_SY, rot=-box.slam_dir * config.SLAM_ROT)
 
 
+GROUND_STATES = (Idle, Walk, Charge, Get)   # 발밑 검사를 하는 상태 (Slam은 돌아온 뒤 검사)
+
+
 class Box:
     def __init__(self, hud, level):
         self.sheet = load_image('resource/box_sheet.png')
@@ -272,10 +284,10 @@ class Box:
         self.slam_cooldown = 0.0
         self.on_accel_ground = False    # 가속 지형 위 여부 (1주차엔 항상 False)
         self.state_machine = StateMachine(self, Idle, {
-            Idle: [(space_down, Charge), (can_pick_tape, Get), (can_slam, Slam), (is_moving, Walk)],
-            Walk: [(space_down, Charge), (can_pick_tape, Get), (can_slam, Slam), (is_stopped, Idle)],
+            Idle: [(is_air, Jump), (space_down, Charge), (can_pick_tape, Get), (can_slam, Slam), (is_moving, Walk)],
+            Walk: [(is_air, Jump), (space_down, Charge), (can_pick_tape, Get), (can_slam, Slam), (is_stopped, Idle)],
             Slam: [(done_moving, Walk), (done_stopped, Idle)],
-            Charge: [(space_up, Jump)],
+            Charge: [(is_air, Jump), (space_up, Jump)],
             Jump: [(done_moving, Walk), (done_stopped, Idle)],
             Get: [(done_moving, Walk), (done_stopped, Idle)],
         })
@@ -300,6 +312,17 @@ class Box:
         self.near_tape = None   # 이번 프레임의 충돌 처리에서 다시 기록됨
         self.slam_cooldown = max(self.slam_cooldown - game_framework.frame_time, 0)
         self.state_machine.update()
+        if self.state_machine.cur in GROUND_STATES:
+            self.check_ground()
+
+    def check_ground(self):
+        # 발밑에 발판이 있으면 붙고 (경사면을 걸으면 y가 따라감), 없으면 공중에 뜸
+        platform = self.level.find_ground(self.x, self.y)
+        if platform:
+            self.y = platform.surface_y(self.x)
+            self.ground = platform
+        else:
+            self.state_machine.handle_event(('AIR', None))
 
     def draw(self):
         self.state_machine.draw()

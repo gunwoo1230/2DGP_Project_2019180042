@@ -39,6 +39,12 @@ class Level:
                 if p.covers(x) and prev_y >= p.surface_y(prev_x) and p.surface_y(x) > y]
         return max(hits, key=lambda p: p.surface_y(x), default=None)
 
+    def find_ground(self, x, y):
+        # 발밑에 붙을 수 있는 발판 중 가장 높은 것
+        hits = [p for p in self.platforms
+                if p.covers(x) and abs(p.surface_y(x) - y) <= config.SNAP]
+        return max(hits, key=lambda p: p.surface_y(x), default=None)
+
     def get_bb(self):
         pass
 
