@@ -14,6 +14,7 @@ def toggle_zone():
     global zone
     zone = 'boss' if zone == 'chase' else 'chase'
     hud.set_zone(zone)
+    box.zone = zone
 
 
 def init():
@@ -23,7 +24,7 @@ def init():
     hud = Hud()
     game_world.add_object(hud, game_world.LAYER_HUD)
     game_world.add_object(Ground(), game_world.LAYER_GROUND)
-    box = Box()
+    box = Box(hud)
     game_world.add_object(box, game_world.LAYER_BOX)
     game_world.add_collision_pair('box:tape', box, None)
     game_world.add_collision_pair('box:dummy', box, None)

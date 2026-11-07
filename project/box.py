@@ -1,10 +1,11 @@
 # 플레이어 박스
 import math
 
-from pico2d import load_image, SDL_KEYDOWN, SDL_KEYUP, SDLK_LEFT, SDLK_RIGHT, SDLK_SPACE
+from pico2d import load_image, SDL_KEYDOWN, SDL_KEYUP, SDLK_LEFT, SDLK_RIGHT, SDLK_SPACE, SDLK_LSHIFT, SDLK_RSHIFT
 
 import config
 import game_framework
+import game_world
 from sprite_data import BOX_ANIM, draw_box
 from state_machine import StateMachine
 
@@ -32,6 +33,14 @@ def space_down(box, event):
 
 def space_up(box, event):
     return event[0] == 'KEY' and event[1].type == SDL_KEYUP and event[1].key == SDLK_SPACE
+
+
+def shift_down(box, event):
+    return event[0] == 'KEY' and event[1].type == SDL_KEYDOWN and event[1].key in (SDLK_LSHIFT, SDLK_RSHIFT)
+
+
+def can_pick_tape(box, event):
+    return shift_down(box, event) and box.zone == 'chase' and box.near_tape is not None and not box.hud.is_full()
 
 
 class Idle:
@@ -150,9 +159,13 @@ class Jump:
 
 
 class Get:
+    FRAMES = BOX_ANIM['get'][1]
+
     @staticmethod
     def enter(box, event):
-        pass
+        box.get_time = 0.0
+        game_world.remove_object(box.near_tape)
+        box.near_tape = None
 
     @staticmethod
     def exit(box, event):
@@ -160,16 +173,22 @@ class Get:
 
     @staticmethod
     def do(box):
-        pass
+        box.get_time += game_framework.frame_time
+        if box.get_time >= config.TAPE_PICKUP_TIME:
+            box.state_machine.handle_event(('DONE', None))
 
     @staticmethod
     def draw(box):
-        pass
+        # 시간 동안 한 번 재생하고 마지막 장에서 멈춤 (정면이라 반전 없음)
+        frame = min(int(box.get_time / config.TAPE_PICKUP_TIME * Get.FRAMES), Get.FRAMES - 1)
+        draw_box(box.sheet, 'get', frame, box.x, box.y)
 
 
 class Box:
-    def __init__(self):
+    def __init__(self, hud):
         self.sheet = load_image('resource/box_sheet.png')
+        self.hud = hud
+        self.zone = 'chase'
         self.x, self.y = config.BOX_START_X, config.GROUND_Y    # 발 위치
         self.left_down, self.right_down = False, False
         self.last_dir = 0       # 마지막에 누른 방향
@@ -181,10 +200,11 @@ class Box:
         self.near_tape = None   # 지금 겹쳐 있는 테이프
         self.on_accel_ground = False    # 가속 지형 위 여부 (1주차엔 항상 False)
         self.state_machine = StateMachine(self, Idle, {
-            Idle: [(space_down, Charge), (is_moving, Walk)],
-            Walk: [(space_down, Charge), (is_stopped, Idle)],
+            Idle: [(space_down, Charge), (can_pick_tape, Get), (is_moving, Walk)],
+            Walk: [(space_down, Charge), (can_pick_tape, Get), (is_stopped, Idle)],
             Charge: [(space_up, Jump)],
             Jump: [(done_moving, Walk), (done_stopped, Idle)],
+            Get: [(done_moving, Walk), (done_stopped, Idle)],
         })
 
     def update(self):
