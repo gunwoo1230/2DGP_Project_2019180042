@@ -7,7 +7,7 @@ import camera
 import config
 import game_framework
 import game_world
-from sprite_data import BOX_ANIM, draw_box
+from sprite_data import BOX_ANIM, draw_box, draw_item
 from state_machine import StateMachine
 from tape import TapePickupFx
 
@@ -199,6 +199,33 @@ class Fall:
         draw_box(box.sheet, 'fall', box.frame, camera.to_screen(box.x), box.y, flip=box.face_dir < 0)
 
 
+class DizzyFx:
+    # 회복 중 머리 위 도는 별
+    image = None
+
+    def __init__(self, box):
+        if DizzyFx.image is None:
+            DizzyFx.image = load_image('resource/item_sheet.png')
+        self.box = box
+        self.time = 0.0
+
+    def update(self):
+        # 디버그 키는 exit 없이 상태를 바꾸므로 직접 확인해서 지움
+        if self.box.state_machine.cur is not Recover:
+            game_world.remove_object(self)
+        self.time += game_framework.frame_time
+
+    def draw(self):
+        draw_item(DizzyFx.image, 'dizzy', self.time * config.DIZZY_FPS, camera.to_screen(self.box.x),
+                  self.box.y + config.BOX_BODY_H + config.DIZZY_GAP)
+
+    def get_bb(self):
+        pass
+
+    def handle_collision(self, group, other):
+        pass
+
+
 class Recover:
     @staticmethod
     def enter(box, event):
@@ -206,6 +233,7 @@ class Recover:
         box.vx = 0.0
         box.recover_time = 0.0
         box.stun_time = (box.takeoff_y - box.y) / config.STUN_PX_PER_SEC    # 떨어진 높이만큼 멈춤
+        game_world.add_object(DizzyFx(box), game_world.LAYER_FX)
 
     @staticmethod
     def exit(box, event):

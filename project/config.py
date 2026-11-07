@@ -32,6 +32,7 @@ BOX_BODY_H = 81                         # 화면에 그려지는 몸통 높이
 ANIM_FPS_IDLE, ANIM_FPS_MOVE = 7, 10    # 애니메이션 속도
 ANIM_FPS_FALL, ANIM_FPS_RECOVER = 10, 7
 STUN_PX_PER_SEC = 180                   # 떨어진 높이 180px당 1초 멈춤
+DIZZY_FPS, DIZZY_GAP = 6, 18            # 도는 별 속도, 머리 위 간격(px)
 
 # 테이프
 TAPE_START, TAPE_MAX = 1, 5             # 생명
