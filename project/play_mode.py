@@ -72,6 +72,7 @@ def draw():
     game_world.draw()
     if show_collision_boxes:
         game_world.draw_collision_boxes()
+        level.draw_debug()
     update_canvas()
 
 

@@ -1,4 +1,6 @@
 # 레벨: 타일 목록으로 발판과 그릴 것을 만듦
+from pico2d import draw_line
+
 import camera
 import config
 from tiles import TILES, Platform, draw_tile, load_images
@@ -24,6 +26,12 @@ class Level:
             if camera.to_screen(left + config.TILE_W) >= -config.DRAW_MARGIN \
                     and camera.to_screen(left) <= config.SCREEN_W + config.DRAW_MARGIN:
                 draw_tile(name, left)
+
+    def draw_debug(self):
+        # F1: 발판 윗면 선 (빨강, 가속 지붕은 주황)
+        for p in self.platforms:
+            color = (255, 140, 0) if p.kind == 'accel' else (255, 0, 0)
+            draw_line(camera.to_screen(p.x0), p.y0, camera.to_screen(p.x1), p.y1, *color)
 
     def get_bb(self):
         pass
