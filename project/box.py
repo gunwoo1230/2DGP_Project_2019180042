@@ -8,6 +8,7 @@ import game_framework
 import game_world
 from sprite_data import BOX_ANIM, draw_box
 from state_machine import StateMachine
+from tape import TapePickupFx
 
 
 # 전환 조건
@@ -164,8 +165,10 @@ class Get:
     @staticmethod
     def enter(box, event):
         box.get_time = 0.0
-        game_world.remove_object(box.near_tape)
+        tape = box.near_tape
+        game_world.remove_object(tape)
         box.near_tape = None
+        game_world.add_object(TapePickupFx(tape.x, tape.y, box, box.hud), game_world.LAYER_FX)
 
     @staticmethod
     def exit(box, event):

@@ -2,6 +2,7 @@
 from pico2d import load_image
 
 import config
+import game_framework
 from sprite_data import ITEM_RECT, SCALE, draw_item
 
 TAPE_W = ITEM_RECT['tape'][0][2] * SCALE    # 화면에 그려지는 크기
@@ -33,14 +34,27 @@ class TapeItem:
 
 
 class TapePickupFx:
+    image = None
+
     def __init__(self, start_x, start_y, box, hud):
-        pass
+        if TapePickupFx.image is None:
+            TapePickupFx.image = load_image('resource/item_sheet.png')
+        self.start_x, self.start_y = start_x, start_y
+        self.x, self.y = start_x, start_y
+        # 머리 위 도착 위치
+        self.head_x = box.x
+        self.head_y = box.y + config.BOX_BODY_H + config.FX_RISE_H
+        self.scale = SCALE
+        self.time = 0.0
 
     def update(self):
-        pass
+        self.time += game_framework.frame_time
+        p = min(self.time / config.FX_RISE_TIME, 1)
+        self.x = self.start_x + (self.head_x - self.start_x) * p
+        self.y = self.start_y + (self.head_y - self.start_y) * p
 
     def draw(self):
-        pass
+        draw_item(TapePickupFx.image, 'tape', 0, self.x, self.y, scale=self.scale)
 
     def get_bb(self):
         pass

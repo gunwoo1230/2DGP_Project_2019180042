@@ -18,6 +18,7 @@ JUMP_MIN_H, JUMP_MAX_H = 48, 150        # px
 GRAVITY = 2400                          # px/s²
 AIR_ACCEL = 1080                        # px/s²
 BOX_BB_W, BOX_BB_H = 86, 66             # 충돌 박스
+BOX_BODY_H = 81                         # 화면에 그려지는 몸통 높이
 ANIM_FPS_IDLE, ANIM_FPS_MOVE = 7, 10    # 애니메이션 속도
 
 # 테이프
