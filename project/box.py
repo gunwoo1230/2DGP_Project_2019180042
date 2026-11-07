@@ -213,7 +213,9 @@ class Slam:
 
     @staticmethod
     def draw(box):
-        draw_box(box.sheet, 'slam', 0, box.x, box.y, flip=box.slam_dir < 0)
+        # 진행 방향으로 기울임 (rot 양수가 반시계)
+        draw_box(box.sheet, 'slam', 0, box.x, box.y, flip=box.slam_dir < 0,
+                 sx=config.SLAM_SX, sy=config.SLAM_SY, rot=-box.slam_dir * config.SLAM_ROT)
 
 
 class Box:
