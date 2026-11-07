@@ -113,6 +113,7 @@ class Jump:
         height = config.JUMP_MIN_H + (config.JUMP_MAX_H - config.JUMP_MIN_H) * box.charge_ratio()
         box.vy = math.sqrt(2 * config.GRAVITY * height)
         box.vx = box.dir * box.charge_speed()   # 시작 가로 속도 = 그때의 이동 속도
+        box.frame = 0
 
     @staticmethod
     def exit(box, event):
@@ -131,14 +132,21 @@ class Jump:
         # 프레임 속도와 상관없이 같은 높이가 되도록 등가속도 공식으로 계산
         box.y += box.vy * dt - 0.5 * config.GRAVITY * dt * dt
         box.vy -= config.GRAVITY * dt
+        box.frame = (box.frame + config.ANIM_FPS_MOVE * dt) % 2
         if box.y <= config.GROUND_Y:
             box.y = config.GROUND_Y
             box.vy = 0
             box.state_machine.handle_event(('DONE', None))
 
     @staticmethod
+    def sheet_frame(box):
+        # 상승은 jump 1~2, 하강은 jump 3~4
+        first = 0 if box.vy > 0 else 2
+        return first + int(box.frame)
+
+    @staticmethod
     def draw(box):
-        draw_box(box.sheet, 'jump', 0, box.x, box.y, flip=box.face_dir < 0)
+        draw_box(box.sheet, 'jump', Jump.sheet_frame(box), box.x, box.y, flip=box.face_dir < 0)
 
 
 class Box:
