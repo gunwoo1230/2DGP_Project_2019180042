@@ -197,26 +197,51 @@ class Slam:
         box.slam_time = 0.0
         box.slam_start_x = box.x
         box.slam_dir = box.face_dir
-        box.slam_hit = False    # 돌진 한 번에 1회만 맞음
+        box.slam_returning = False  # 돌아오는 중에는 맞지 않아서 돌진 한 번에 1회만 맞음
 
     @staticmethod
     def exit(box, event):
-        box.slam_cooldown = config.SLAM_COOLDOWN    # 돌진 끝난 뒤부터 쿨타임
+        box.slam_cooldown = config.SLAM_COOLDOWN    # 돌아온 뒤부터 쿨타임
+
+    @staticmethod
+    def start_return(box):
+        # 지금 위치에서 시작 위치로 튕겨 돌아옴
+        box.slam_returning = True
+        box.slam_time = 0.0
+        box.slam_return_x = box.x
+
+    @staticmethod
+    def return_ratio(box):
+        return min(box.slam_time / config.SLAM_RETURN_TIME, 1)
 
     @staticmethod
     def do(box):
+        # 돌진 끝 위치의 충돌까지 확인한 다음 프레임에 돌아오기 시작
+        if not box.slam_returning and box.slam_time >= config.SLAM_TIME:
+            Slam.start_return(box)
         box.slam_time += game_framework.frame_time
-        p = min(box.slam_time / config.SLAM_TIME, 1)
-        box.x = box.slam_start_x + box.slam_dir * config.SLAM_DIST * p
-        box.clamp_x()
-        if p >= 1:
-            box.state_machine.handle_event(('DONE', None))
+        if box.slam_returning:
+            t = Slam.return_ratio(box)
+            eased = 1 - (1 - t) ** 2    # 처음엔 빠르게 튕기고 갈수록 느려짐
+            box.x = box.slam_return_x + (box.slam_start_x - box.slam_return_x) * eased
+            if t >= 1:
+                box.state_machine.handle_event(('DONE', None))
+        else:
+            p = min(box.slam_time / config.SLAM_TIME, 1)
+            box.x = box.slam_start_x + box.slam_dir * config.SLAM_DIST * p
+            box.clamp_x()
 
     @staticmethod
     def draw(box):
-        # 진행 방향으로 기울임 (rot 양수가 반시계)
-        draw_box(box.sheet, 'slam', 0, box.x, box.y, flip=box.slam_dir < 0,
-                 sx=config.SLAM_SX, sy=config.SLAM_SY, rot=-box.slam_dir * config.SLAM_ROT)
+        if box.slam_returning:
+            # 튕김은 그림 위치만 움직임 (실제 y는 그대로), 진행 방향 반대로 기울임
+            hop = config.SLAM_BOUNCE_H * math.sin(math.pi * Slam.return_ratio(box))
+            draw_box(box.sheet, 'slam', 0, box.x, box.y + hop, flip=box.slam_dir < 0,
+                     rot=box.slam_dir * config.SLAM_ROT)
+        else:
+            # 진행 방향으로 기울임 (rot 양수가 반시계)
+            draw_box(box.sheet, 'slam', 0, box.x, box.y, flip=box.slam_dir < 0,
+                     sx=config.SLAM_SX, sy=config.SLAM_SY, rot=-box.slam_dir * config.SLAM_ROT)
 
 
 class Box:
@@ -315,6 +340,6 @@ class Box:
         if group == 'box:tape':
             self.near_tape = other
         elif group == 'box:dummy':
-            if self.state_machine.cur is Slam and not self.slam_hit:
-                self.slam_hit = True
+            if self.state_machine.cur is Slam and not self.slam_returning:
                 other.on_hit()
+                Slam.start_return(self)

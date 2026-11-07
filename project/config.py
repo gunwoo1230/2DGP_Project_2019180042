@@ -36,6 +36,7 @@ FX_END_SCALE = 0.37                     # 생명 칸에 도착할 때 배율
 
 # 몸통박치기
 SLAM_DIST, SLAM_TIME, SLAM_COOLDOWN = 130, 0.22, 0.5    # px, 초, 초
+SLAM_RETURN_TIME, SLAM_BOUNCE_H = 0.25, 16              # 돌아오는 시간(초), 튕김 높이(px, 그림만)
 SLAM_SX, SLAM_SY, SLAM_ROT = 1.2, 0.85, 0.15            # 임시 그림 배율, 기울기(rad)
 
 # 허수아비
