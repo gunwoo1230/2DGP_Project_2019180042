@@ -1,4 +1,6 @@
 # 플레이어 박스
+import math
+
 from pico2d import load_image, SDL_KEYDOWN, SDL_KEYUP, SDLK_LEFT, SDLK_RIGHT
 
 import config
@@ -36,9 +38,13 @@ class Idle:
 
 
 class Walk:
+    FRAMES = BOX_ANIM['jump'][1]
+    CYCLE_TIME = FRAMES / config.ANIM_FPS_MOVE  # 애니 한 바퀴에 깡충 1번
+
     @staticmethod
     def enter(box, event):
-        pass
+        box.frame = 0
+        box.walk_time = 0.0
 
     @staticmethod
     def exit(box, event):
@@ -46,12 +52,20 @@ class Walk:
 
     @staticmethod
     def do(box):
-        box.x += box.dir * config.WALK_SPEED * game_framework.frame_time
+        dt = game_framework.frame_time
+        box.x += box.dir * config.WALK_SPEED * dt
         box.clamp_x()
+        box.frame = (box.frame + config.ANIM_FPS_MOVE * dt) % Walk.FRAMES
+        box.walk_time += dt
+
+    @staticmethod
+    def hop_offset(box):
+        # 깡충은 그림 위치만 움직임 (실제 y는 그대로)
+        return config.HOP_HEIGHT * abs(math.sin(math.pi * box.walk_time / Walk.CYCLE_TIME))
 
     @staticmethod
     def draw(box):
-        draw_box(box.sheet, 'jump', 0, box.x, box.y, flip=box.face_dir < 0)
+        draw_box(box.sheet, 'jump', box.frame, box.x, box.y + Walk.hop_offset(box), flip=box.face_dir < 0)
 
 
 class Box:
