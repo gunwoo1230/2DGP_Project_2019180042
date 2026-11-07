@@ -18,6 +18,14 @@ def is_stopped(box, event):
     return event[0] == 'KEY' and box.dir == 0
 
 
+def done_moving(box, event):
+    return event[0] == 'DONE' and box.dir != 0
+
+
+def done_stopped(box, event):
+    return event[0] == 'DONE' and box.dir == 0
+
+
 def space_down(box, event):
     return event[0] == 'KEY' and event[1].type == SDL_KEYDOWN and event[1].key == SDLK_SPACE
 
@@ -102,7 +110,8 @@ class Charge:
 class Jump:
     @staticmethod
     def enter(box, event):
-        pass
+        height = config.JUMP_MIN_H + (config.JUMP_MAX_H - config.JUMP_MIN_H) * box.charge_ratio()
+        box.vy = math.sqrt(2 * config.GRAVITY * height)
 
     @staticmethod
     def exit(box, event):
@@ -110,11 +119,18 @@ class Jump:
 
     @staticmethod
     def do(box):
-        pass
+        dt = game_framework.frame_time
+        # 프레임 속도와 상관없이 같은 높이가 되도록 등가속도 공식으로 계산
+        box.y += box.vy * dt - 0.5 * config.GRAVITY * dt * dt
+        box.vy -= config.GRAVITY * dt
+        if box.y <= config.GROUND_Y:
+            box.y = config.GROUND_Y
+            box.vy = 0
+            box.state_machine.handle_event(('DONE', None))
 
     @staticmethod
     def draw(box):
-        pass
+        draw_box(box.sheet, 'jump', 0, box.x, box.y, flip=box.face_dir < 0)
 
 
 class Box:
@@ -127,11 +143,13 @@ class Box:
         self.face_dir = 1       # 바라보는 방향
         self.frame = 0
         self.charge_time = 0.0
+        self.vy = 0.0
         self.on_accel_ground = False    # 가속 지형 위 여부 (1주차엔 항상 False)
         self.state_machine = StateMachine(self, Idle, {
             Idle: [(space_down, Charge), (is_moving, Walk)],
             Walk: [(space_down, Charge), (is_stopped, Idle)],
-            Charge: [(space_up, Idle)],     # 임시 규칙: 점프를 채울 때 교체
+            Charge: [(space_up, Jump)],
+            Jump: [(done_moving, Walk), (done_stopped, Idle)],
         })
 
     def update(self):
