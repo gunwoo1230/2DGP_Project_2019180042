@@ -302,6 +302,12 @@ class Box:
         self.slam_cooldown = 0.0
         self.state_machine.reset(Walk if self.dir != 0 else Idle)
 
+    def warp(self, x):
+        # 디버그: 그 x의 도로 위로 옮김
+        self.x, self.y = x, config.ROAD_Y
+        self.vx, self.vy = 0.0, 0.0
+        self.state_machine.reset(Walk if self.dir != 0 else Idle)
+
     def drop_to(self, y):
         # 디버그: 그 높이 + 1px에서 공중으로 시작
         self.y = y + 1

@@ -33,6 +33,11 @@ class Level:
             color = (255, 140, 0) if p.kind == 'accel' else (255, 0, 0)
             draw_line(camera.to_screen(p.x0), p.y0, camera.to_screen(p.x1), p.y1, *color)
 
+    def next_tile_left(self, x):
+        # x가 속한 타일의 다음 타일 왼쪽 끝, 마지막 타일이면 None
+        i = int((x - config.MAP_LEFT) // config.TILE_W) + 1
+        return self.tiles[i][1] if i < len(self.tiles) else None
+
     def find_landing(self, prev_x, prev_y, x, y):
         # 위에서 윗면을 지나 내려온 발판 중 가장 높은 것 (경사가 있어 각 위치의 윗면과 비교)
         hits = [p for p in self.platforms

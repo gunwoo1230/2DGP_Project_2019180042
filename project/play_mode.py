@@ -92,6 +92,10 @@ def handle_events():
             show_collision_boxes = not show_collision_boxes
         elif event.type == SDL_KEYDOWN and event.key == SDLK_r:
             reset()
+        elif event.type == SDL_KEYDOWN and event.key == SDLK_n:
+            next_left = level.next_tile_left(box.x)
+            if next_left is not None:
+                box.warp(next_left)
         elif event.type == SDL_KEYDOWN and event.key in DROP_KEYS:
             box.drop_to(DROP_KEYS[event.key])
         else:
