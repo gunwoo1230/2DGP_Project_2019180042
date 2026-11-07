@@ -6,8 +6,15 @@ import game_world
 from hud import Hud
 
 
+def toggle_zone():
+    global zone
+    zone = 'boss' if zone == 'chase' else 'chase'
+    hud.set_zone(zone)
+
+
 def init():
-    global hud
+    global hud, zone
+    zone = 'chase'
     hud = Hud()
     game_world.add_object(hud, game_world.LAYER_HUD)
 
@@ -32,3 +39,5 @@ def handle_events():
             game_framework.quit()
         elif event.type == SDL_KEYDOWN and event.key == SDLK_ESCAPE:
             game_framework.quit()
+        elif event.type == SDL_KEYDOWN and event.key == SDLK_b:
+            toggle_zone()

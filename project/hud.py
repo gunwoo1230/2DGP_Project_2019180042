@@ -7,6 +7,8 @@ import game_framework
 
 # 구간별 지금 칸 낱말
 NOW_WORDS = {'chase': ('낮', '주택가'), 'boss': ('저녁', '공원')}
+# 구간별 팁 목록
+TIP_LISTS = {'chase': font_data.TIP_LIST['day'], 'boss': font_data.TIP_LIST['boss']}
 
 
 class Hud:
@@ -21,7 +23,7 @@ class Hud:
         self.tip_time += game_framework.frame_time
         if self.tip_time >= config.TIP_INTERVAL:
             self.tip_time -= config.TIP_INTERVAL
-            self.tip_index = (self.tip_index + 1) % len(font_data.TIP_LIST['day'])
+            self.tip_index = (self.tip_index + 1) % len(TIP_LISTS[self.zone])
 
     def draw(self):
         self.frame.draw(config.SCREEN_W / 2, config.SCREEN_H / 2)
@@ -37,7 +39,10 @@ class Hud:
         pass
 
     def set_zone(self, zone):
-        pass
+        # 구간이 바뀌면 팁을 첫 문장부터 다시 씀
+        self.zone = zone
+        self.tip_index = 0
+        self.tip_time = 0.0
 
     def add_life(self):
         pass
@@ -55,7 +60,7 @@ class Hud:
             font_data.draw_number(self.font, 0, x, config.UI_HEADER_Y)
 
     def draw_tip(self):
-        tip_key = font_data.TIP_LIST['day'][self.tip_index]
+        tip_key = TIP_LISTS[self.zone][self.tip_index]
         count = int(self.tip_time / config.TIP_CHAR_TIME)      # 지금까지 써진 글자 수
         font_data.draw_tip(self.font, font_data.TIPS[tip_key], config.UI_TIP_X, config.UI_TIP_Y, count=count)
 
