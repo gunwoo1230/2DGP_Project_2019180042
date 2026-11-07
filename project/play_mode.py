@@ -1,11 +1,13 @@
 # 플레이 모드
 from pico2d import *
 
+import config
 import game_framework
 import game_world
 from box import Box
 from ground import Ground
 from hud import Hud
+from tape import TapeItem
 
 
 def toggle_zone():
@@ -25,6 +27,8 @@ def init():
     game_world.add_object(box, game_world.LAYER_BOX)
     game_world.add_collision_pair('box:tape', box, None)
     game_world.add_collision_pair('box:dummy', box, None)
+    for x in config.TAPE_XS:
+        game_world.add_object(TapeItem(x), game_world.LAYER_ITEM)
 
 
 def finish():

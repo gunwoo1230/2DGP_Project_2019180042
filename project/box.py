@@ -149,6 +149,24 @@ class Jump:
         draw_box(box.sheet, 'jump', Jump.sheet_frame(box), box.x, box.y, flip=box.face_dir < 0)
 
 
+class Get:
+    @staticmethod
+    def enter(box, event):
+        pass
+
+    @staticmethod
+    def exit(box, event):
+        pass
+
+    @staticmethod
+    def do(box):
+        pass
+
+    @staticmethod
+    def draw(box):
+        pass
+
+
 class Box:
     def __init__(self):
         self.sheet = load_image('resource/box_sheet.png')
