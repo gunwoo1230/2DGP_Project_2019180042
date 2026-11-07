@@ -1,6 +1,7 @@
 # 플레이 모드
 from pico2d import *
 
+import camera
 import config
 import game_framework
 import game_world
@@ -59,6 +60,7 @@ def finish():
 def update():
     game_world.update()
     game_world.handle_collisions()
+    camera.follow(box.x)
 
 
 def draw():
