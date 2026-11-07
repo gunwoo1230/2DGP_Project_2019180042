@@ -3,6 +3,7 @@ from pico2d import *
 
 import game_framework
 import game_world
+from box import Box
 from ground import Ground
 from hud import Hud
 
@@ -14,11 +15,13 @@ def toggle_zone():
 
 
 def init():
-    global hud, zone
+    global hud, zone, box
     zone = 'chase'
     hud = Hud()
     game_world.add_object(hud, game_world.LAYER_HUD)
     game_world.add_object(Ground(), game_world.LAYER_GROUND)
+    box = Box()
+    game_world.add_object(box, game_world.LAYER_BOX)
 
 
 def finish():
@@ -43,3 +46,5 @@ def handle_events():
             game_framework.quit()
         elif event.type == SDL_KEYDOWN and event.key == SDLK_b:
             toggle_zone()
+        else:
+            box.handle_event(event)
