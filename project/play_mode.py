@@ -10,7 +10,7 @@ def init():
 
 
 def finish():
-    pass
+    game_world.clear()
 
 
 def update():
