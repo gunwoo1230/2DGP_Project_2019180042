@@ -7,6 +7,11 @@ PLAY_BOTTOM, PLAY_TOP = 110, 810        # 플레이 칸 아래·위
 ROAD_Y = 210                            # 도로 높이
 SPRITE_SCALE = 0.6                      # 스프라이트 그리기 배율
 
+# 맵·카메라
+TILE_W = 600                            # 타일 폭
+MAP_LEFT = 20                           # 첫 타일 왼쪽 끝 월드 x
+CAMERA_FOLLOW_X = 640                   # 박스가 이 화면 x를 넘으면 카메라가 따라감
+
 # 박스 이동
 BOX_START_X = 200                       # 시작 위치
 WALK_SPEED = 310                        # px/s

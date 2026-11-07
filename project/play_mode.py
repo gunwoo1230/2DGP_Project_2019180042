@@ -36,6 +36,7 @@ def reset():
     spawn_items()
     hud.reset_lives()
     box.reset()
+    camera.reset()
 
 
 def init():
@@ -51,6 +52,7 @@ def init():
     game_world.add_collision_pair('box:tape', box, None)
     game_world.add_collision_pair('box:dummy', box, None)
     spawn_items()
+    camera.init(config.MAP_LEFT + config.TILE_W * 11)   # 임시: 레벨이 생기면 레벨 끝으로 교체
 
 
 def finish():
