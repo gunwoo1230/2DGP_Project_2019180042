@@ -33,7 +33,9 @@ def init():
         tape = TapeItem(x)
         game_world.add_object(tape, game_world.LAYER_ITEM)
         game_world.add_collision_pair('box:tape', None, tape)
-    game_world.add_object(Dummy(), game_world.LAYER_ITEM)
+    dummy = Dummy()
+    game_world.add_object(dummy, game_world.LAYER_ITEM)
+    game_world.add_collision_pair('box:dummy', None, dummy)
 
 
 def finish():
