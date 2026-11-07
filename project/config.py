@@ -14,6 +14,7 @@ CAMERA_FOLLOW_X = 640                   # 박스가 이 화면 x를 넘으면 �
 DRAW_MARGIN = 100                       # 화면 밖 이만큼까지는 그림
 FOOT_HALF = 20                          # 발 폭의 절반 (발판 위에 서 있는지 판정)
 SNAP = 8                                # 발밑 발판에 붙는 허용 오차(px)
+FLOOR_YS = (ROAD_Y, LEDGE_Y, ROOF_Y)    # 층 최소 높이
 
 # 박스 이동
 BOX_START_X = 200                       # 시작 위치

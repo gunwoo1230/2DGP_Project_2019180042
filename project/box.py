@@ -140,6 +140,9 @@ class Jump:
             box.vy = 0      # 발판에서 벗어남: 위로 뛰지 않고 가로 속도 유지
         box.jump_vy = box.vy    # 점프 시작 속도 (높이가 달라도 같은 비율로 그림을 넘기는 기준)
         box.ground = None
+        # 출발 높이가 속한 층이 시작 층 (높이 계산 오차를 막기 위해 +1)
+        box.takeoff_y = box.y
+        box.floor_y = max(y for y in config.FLOOR_YS if y <= box.takeoff_y + 1)
 
     @staticmethod
     def exit(box, event):
