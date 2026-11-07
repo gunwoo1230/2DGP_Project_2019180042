@@ -37,6 +37,10 @@ def is_fall(box, event):
     return event[0] == 'FALL'
 
 
+def is_done(box, event):
+    return event[0] == 'DONE'
+
+
 def space_down(box, event):
     return event[0] == 'KEY' and event[1].type == SDL_KEYDOWN and event[1].key == SDLK_SPACE
 
@@ -173,9 +177,11 @@ class Jump:
 
 
 class Fall:
+    LAST_FRAME = BOX_ANIM['fall'][1] - 1
+
     @staticmethod
     def enter(box, event):
-        pass
+        box.frame = 0
 
     @staticmethod
     def exit(box, event):
@@ -183,18 +189,23 @@ class Fall:
 
     @staticmethod
     def do(box):
+        # 한 번 재생하고 마지막 장 유지
+        box.frame = min(box.frame + config.ANIM_FPS_FALL * game_framework.frame_time, Fall.LAST_FRAME)
         if box.move_in_air():
-            box.state_machine.reset(Idle)   # 임시: 회복 상태가 생기면 교체
+            box.state_machine.handle_event(('DONE', None))
 
     @staticmethod
     def draw(box):
-        draw_box(box.sheet, 'fall', 0, camera.to_screen(box.x), box.y, flip=box.face_dir < 0)
+        draw_box(box.sheet, 'fall', box.frame, camera.to_screen(box.x), box.y, flip=box.face_dir < 0)
 
 
 class Recover:
     @staticmethod
     def enter(box, event):
-        pass
+        box.frame = 0
+        box.vx = 0.0
+        box.recover_time = 0.0
+        box.stun_time = (box.takeoff_y - box.y) / config.STUN_PX_PER_SEC    # 떨어진 높이만큼 멈춤
 
     @staticmethod
     def exit(box, event):
@@ -202,11 +213,15 @@ class Recover:
 
     @staticmethod
     def do(box):
-        pass
+        dt = game_framework.frame_time
+        box.frame = (box.frame + config.ANIM_FPS_RECOVER * dt) % BOX_ANIM['recover'][1]
+        box.recover_time += dt
+        if box.recover_time >= box.stun_time:
+            box.state_machine.handle_event(('DONE', None))
 
     @staticmethod
     def draw(box):
-        pass
+        draw_box(box.sheet, 'recover', box.frame, camera.to_screen(box.x), box.y, flip=box.face_dir < 0)
 
 
 class Get:
@@ -319,6 +334,8 @@ class Box:
             Slam: [(done_moving, Walk), (done_stopped, Idle)],
             Charge: [(is_air, Jump), (space_up, Jump)],
             Jump: [(is_fall, Fall), (done_moving, Walk), (done_stopped, Idle)],
+            Fall: [(is_done, Recover)],
+            Recover: [(done_moving, Walk), (done_stopped, Idle)],
             Get: [(done_moving, Walk), (done_stopped, Idle)],
         })
 
