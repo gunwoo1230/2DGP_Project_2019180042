@@ -1,6 +1,6 @@
 # 이벤트 기반 상태 머신
 # 규칙 형식: {상태: [(조건 함수, 다음 상태), ...]}, 조건 함수는 check(owner, event)
-# 이벤트 형식: ('KEY', sdl_event), ('DONE', None), ('AIR', None)
+# 이벤트 형식: ('KEY', sdl_event), ('DONE', None), ('AIR', None), ('FALL', None)
 
 
 class StateMachine:

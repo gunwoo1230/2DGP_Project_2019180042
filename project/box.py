@@ -33,6 +33,10 @@ def is_air(box, event):
     return event[0] == 'AIR'
 
 
+def is_fall(box, event):
+    return event[0] == 'FALL'
+
+
 def space_down(box, event):
     return event[0] == 'KEY' and event[1].type == SDL_KEYDOWN and event[1].key == SDLK_SPACE
 
@@ -150,25 +154,11 @@ class Jump:
 
     @staticmethod
     def do(box):
-        dt = game_framework.frame_time
-        prev_x, prev_y = box.x, box.y
-        # 공중 좌우 조작: 입력이 있으면 목표 속도로 천천히 변함, 없으면 유지
-        if box.dir != 0:
-            diff = box.dir * config.WALK_SPEED - box.vx
-            change = config.AIR_ACCEL * dt
-            box.vx += diff if abs(diff) <= change else math.copysign(change, diff)
-        box.x += box.vx * dt
-        box.clamp_x()
-        # 프레임 속도와 상관없이 같은 높이가 되도록 등가속도 공식으로 계산
-        box.y += box.vy * dt - 0.5 * config.GRAVITY * dt * dt
-        box.vy -= config.GRAVITY * dt
-        # 내려오는 중에만 밟힘 (아래에서 위로는 통과)
-        platform = box.level.find_landing(prev_x, prev_y, box.x, box.y) if box.vy <= 0 else None
-        if platform:
-            box.y = platform.surface_y(box.x)
-            box.vy = 0
-            box.ground = platform
+        # 착지를 먼저 봄: 시작 층 높이에 내려앉는 순간이 추락이 되지 않게
+        if box.move_in_air():
             box.state_machine.handle_event(('DONE', None))
+        elif box.y < box.floor_y:
+            box.state_machine.handle_event(('FALL', None))
 
     @staticmethod
     def sheet_frame(box):
@@ -193,11 +183,12 @@ class Fall:
 
     @staticmethod
     def do(box):
-        pass
+        if box.move_in_air():
+            box.state_machine.reset(Idle)   # 임시: 회복 상태가 생기면 교체
 
     @staticmethod
     def draw(box):
-        pass
+        draw_box(box.sheet, 'fall', 0, camera.to_screen(box.x), box.y, flip=box.face_dir < 0)
 
 
 class Recover:
@@ -327,7 +318,7 @@ class Box:
             Walk: [(is_air, Jump), (space_down, Charge), (can_pick_tape, Get), (can_slam, Slam), (is_stopped, Idle)],
             Slam: [(done_moving, Walk), (done_stopped, Idle)],
             Charge: [(is_air, Jump), (space_up, Jump)],
-            Jump: [(done_moving, Walk), (done_stopped, Idle)],
+            Jump: [(is_fall, Fall), (done_moving, Walk), (done_stopped, Idle)],
             Get: [(done_moving, Walk), (done_stopped, Idle)],
         })
 
@@ -359,6 +350,28 @@ class Box:
         self.state_machine.update()
         if self.state_machine.cur in GROUND_STATES:
             self.check_ground()
+
+    def move_in_air(self):
+        # Jump·Fall 공통 공중 이동, 착지했으면 True
+        dt = game_framework.frame_time
+        prev_x, prev_y = self.x, self.y
+        # 공중 좌우 조작: 입력이 있으면 목표 속도로 천천히 변함, 없으면 유지
+        if self.dir != 0:
+            diff = self.dir * config.WALK_SPEED - self.vx
+            change = config.AIR_ACCEL * dt
+            self.vx += diff if abs(diff) <= change else math.copysign(change, diff)
+        self.x += self.vx * dt
+        self.clamp_x()
+        # 프레임 속도와 상관없이 같은 높이가 되도록 등가속도 공식으로 계산
+        self.y += self.vy * dt - 0.5 * config.GRAVITY * dt * dt
+        self.vy -= config.GRAVITY * dt
+        # 내려오는 중에만 밟힘 (아래에서 위로는 통과)
+        platform = self.level.find_landing(prev_x, prev_y, self.x, self.y) if self.vy <= 0 else None
+        if platform:
+            self.y = platform.surface_y(self.x)
+            self.vy = 0
+            self.ground = platform
+        return platform is not None
 
     def check_ground(self):
         # 발밑에 발판이 있으면 붙고 (경사면을 걸으면 y가 따라감), 없으면 공중에 뜸
