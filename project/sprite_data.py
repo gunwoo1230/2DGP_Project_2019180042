@@ -2,6 +2,8 @@
 # 좌표는 모두 pico2d 기준: 이미지 왼쪽 아래가 (0, 0)
 # 시트는 크게(2배 기준) 그려져 있음 -> 게임에서는 SCALE=0.6으로 그림 (박스 약 107 x 81)
 
+import math
+
 from config import SPRITE_SCALE
 
 SCALE = SPRITE_SCALE
@@ -18,6 +20,10 @@ BOX_ANIM = {                # 이름: (행의 bottom, 프레임 수)
     'recover': (204, 3),
     'get':     (0, 3),      # 정면
 }
+BOX_TEMP_POSE = {           # 진짜 그림이 오면 BOX_ANIM에 행을 추가하고 여기서 삭제
+    'charge': ('idle', 0),  # 기모으기
+    'slam':   ('jump', 0),  # 몸통박치기
+}
 
 # ---------- item_sheet.png (468 x 421) ----------
 # 프레임별 (left, bottom, w, h)
@@ -29,16 +35,22 @@ ITEM_RECT = {
 }
 
 
-def draw_box(sheet, anim, frame, x, y, flip=False, scale=SCALE):
-    """(x, y) = 박스 바닥 가운데. 발 위치에 맞춰 그리면 됨. flip=True면 왼쪽을 봄."""
+def draw_box(sheet, anim, frame, x, y, flip=False, scale=SCALE, sx=1, sy=1, rot=0):
+    """(x, y) = 박스 바닥 가운데. 발 위치에 맞춰 그리면 됨. flip=True면 왼쪽을 봄.
+    sx, sy = 가로·세로 배율, rot = 회전(rad, 양수가 반시계). 기준점은 움직이지 않음."""
+    if anim in BOX_TEMP_POSE:       # 그림이 아직 없는 동작
+        anim, frame = BOX_TEMP_POSE[anim]
     bottom, n = BOX_ANIM[anim]
     left = (int(frame) % n) * BOX_W
-    w, h = BOX_W * scale, BOX_H * scale
+    w, h = BOX_W * scale * sx, BOX_H * scale * sy
     ax, ay = BOX_ANCHOR
-    cx = x + (BOX_W / 2 - ax) * scale * (-1 if flip else 1)
-    cy = y + (BOX_H / 2 - ay) * scale
-    if flip:
-        sheet.clip_composite_draw(left, bottom, BOX_W, BOX_H, 0, 'h', cx, cy, w, h)
+    # 그림은 가운데를 중심으로 회전하므로, 기준점에서 가운데까지의 거리도 함께 돌림
+    dx = (BOX_W / 2 - ax) * scale * sx * (-1 if flip else 1)
+    dy = (BOX_H / 2 - ay) * scale * sy
+    cx = x + dx * math.cos(rot) - dy * math.sin(rot)
+    cy = y + dx * math.sin(rot) + dy * math.cos(rot)
+    if flip or rot:
+        sheet.clip_composite_draw(left, bottom, BOX_W, BOX_H, rot, 'h' if flip else '', cx, cy, w, h)
     else:
         sheet.clip_draw(left, bottom, BOX_W, BOX_H, cx, cy, w, h)
 
