@@ -46,11 +46,12 @@ class Walk:
 
     @staticmethod
     def do(box):
-        pass
+        box.x += box.dir * config.WALK_SPEED * game_framework.frame_time
+        box.clamp_x()
 
     @staticmethod
     def draw(box):
-        pass
+        draw_box(box.sheet, 'jump', 0, box.x, box.y, flip=box.face_dir < 0)
 
 
 class Box:
@@ -83,6 +84,11 @@ class Box:
         if event.key in (SDLK_LEFT, SDLK_RIGHT):
             self.update_dir(event)
         self.state_machine.handle_event(('KEY', event))
+
+    def clamp_x(self):
+        # 플레이 칸 좌우 끝을 넘지 못함
+        half = config.BOX_BB_W / 2
+        self.x = max(config.PLAY_LEFT + half, min(self.x, config.PLAY_RIGHT - half))
 
     def update_dir(self, event):
         # 왼쪽·오른쪽 눌림 기록
