@@ -175,7 +175,8 @@ class Box:
         self.state_machine.draw()
 
     def get_bb(self):
-        pass
+        half = config.BOX_BB_W / 2
+        return self.x - half, self.y, self.x + half, self.y + config.BOX_BB_H
 
     def handle_event(self, event):
         if event.type not in (SDL_KEYDOWN, SDL_KEYUP):

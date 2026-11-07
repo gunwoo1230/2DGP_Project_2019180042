@@ -22,6 +22,8 @@ def init():
     game_world.add_object(Ground(), game_world.LAYER_GROUND)
     box = Box()
     game_world.add_object(box, game_world.LAYER_BOX)
+    game_world.add_collision_pair('box:tape', box, None)
+    game_world.add_collision_pair('box:dummy', box, None)
 
 
 def finish():
@@ -30,6 +32,7 @@ def finish():
 
 def update():
     game_world.update()
+    game_world.handle_collisions()
 
 
 def draw():
