@@ -42,8 +42,8 @@ def init():
     show_collision_boxes = False
     zone = 'chase'
     hud = Hud()
-    game_world.add_object(hud, game_world.LAYER_HUD)
-    game_world.add_object(Ground(), game_world.LAYER_GROUND)
+    game_world.add_object(hud, game_world.LAYER_BG)
+    game_world.add_object(Ground(), game_world.LAYER_MAP)
     box = Box(hud)
     game_world.add_object(box, game_world.LAYER_BOX)
     game_world.add_collision_pair('box:tape', box, None)
