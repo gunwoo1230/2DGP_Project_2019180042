@@ -2,7 +2,9 @@
 # 좌표는 모두 pico2d 기준: 이미지 왼쪽 아래가 (0, 0)
 # 시트는 크게(2배 기준) 그려져 있음 -> 게임에서는 SCALE=0.6으로 그림 (박스 약 107 x 81)
 
-SCALE = 0.6
+from config import SPRITE_SCALE
+
+SCALE = SPRITE_SCALE
 
 # ---------- box_sheet.png (940 x 1224) ----------
 # 한 행 = 한 애니메이션, 한 칸 = 235 x 204, 모든 칸의 기준점이 같은 자리
