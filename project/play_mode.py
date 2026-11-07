@@ -48,7 +48,7 @@ def init():
     game_world.add_object(hud, game_world.LAYER_UI)
     level = Level(['start'] * 11)   # 임시: 발판이 생기면 TEST_MAP으로 교체
     game_world.add_object(level, game_world.LAYER_MAP)
-    box = Box(hud)
+    box = Box(hud, level)
     game_world.add_object(box, game_world.LAYER_BOX)
     game_world.add_collision_pair('box:tape', box, None)
     game_world.add_collision_pair('box:dummy', box, None)

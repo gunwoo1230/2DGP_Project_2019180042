@@ -246,9 +246,10 @@ class Slam:
 
 
 class Box:
-    def __init__(self, hud):
+    def __init__(self, hud, level):
         self.sheet = load_image('resource/box_sheet.png')
         self.hud = hud
+        self.level = level
         self.zone = 'chase'
         self.x, self.y = config.BOX_START_X, config.ROAD_Y    # 발 위치
         self.left_down, self.right_down = False, False
@@ -309,9 +310,9 @@ class Box:
         return config.WALK_SPEED * config.CHARGE_SPEED_RATE
 
     def clamp_x(self):
-        # 플레이 칸 좌우 끝을 넘지 못함
+        # 왼쪽은 화면 끝에 막혀 되돌아갈 수 없고, 오른쪽은 맵 끝에 보이지 않는 벽
         half = config.BOX_BB_W / 2
-        self.x = max(config.PLAY_LEFT + half, min(self.x, config.PLAY_RIGHT - half))
+        self.x = max(camera.x + config.PLAY_LEFT + half, min(self.x, self.level.right - half))
 
     def update_dir(self, event):
         # 왼쪽·오른쪽 눌림 기록
