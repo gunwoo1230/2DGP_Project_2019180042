@@ -30,6 +30,7 @@ TAPE_BB_RATE = 0.8                      # 충돌 박스 = 그림 크기의 80%
 # 줍기 연출
 FX_RISE_TIME, FX_SPARKLE_TIME, FX_FLY_TIME = 0.25, 0.25, 0.35   # 초
 FX_RISE_H, FX_SPARKLE_FPS = 60, 8       # 머리 위 높이(px), 반짝임 속도
+FX_END_SCALE = 0.37                     # 생명 칸에 도착할 때 배율
 
 # 몸통박치기
 SLAM_DIST, SLAM_TIME, SLAM_COOLDOWN = 130, 0.22, 0.5    # px, 초, 초

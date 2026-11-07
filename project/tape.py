@@ -3,6 +3,7 @@ from pico2d import load_image
 
 import config
 import game_framework
+import game_world
 from sprite_data import ITEM_RECT, SCALE, draw_item
 
 TAPE_W = ITEM_RECT['tape'][0][2] * SCALE    # 화면에 그려지는 크기
@@ -44,14 +45,32 @@ class TapePickupFx:
         # 머리 위 도착 위치
         self.head_x = box.x
         self.head_y = box.y + config.BOX_BODY_H + config.FX_RISE_H
+        # 날아갈 생명 칸은 생성할 때 정해 둠
+        self.hud = hud
+        slot = hud.reserve_slot()
+        self.slot_x = config.UI_LIFE_X + config.UI_LIFE_GAP * slot
+        self.slot_y = config.UI_LIFE_Y
         self.scale = SCALE
         self.time = 0.0
 
     def update(self):
         self.time += game_framework.frame_time
-        p = min(self.time / config.FX_RISE_TIME, 1)
-        self.x = self.start_x + (self.head_x - self.start_x) * p
-        self.y = self.start_y + (self.head_y - self.start_y) * p
+        fly_time = self.time - config.FX_RISE_TIME - config.FX_SPARKLE_TIME
+        if fly_time < 0:
+            # 머리 위로 떠오름 (다 떠오르면 그 자리에서 반짝임)
+            p = min(self.time / config.FX_RISE_TIME, 1)
+            self.x = self.start_x + (self.head_x - self.start_x) * p
+            self.y = self.start_y + (self.head_y - self.start_y) * p
+            return
+
+        # 작아지며 생명 칸으로 날아감
+        p = min(fly_time / config.FX_FLY_TIME, 1)
+        self.x = self.head_x + (self.slot_x - self.head_x) * p
+        self.y = self.head_y + (self.slot_y - self.head_y) * p
+        self.scale = SCALE + (config.FX_END_SCALE - SCALE) * p
+        if p >= 1:
+            self.hud.add_life()
+            game_world.remove_object(self)
 
     def draw(self):
         # 떠오른 뒤 머리 위에 있는 동안 테이프 뒤에서 반짝임

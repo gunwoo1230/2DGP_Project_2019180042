@@ -18,6 +18,7 @@ class Hud:
         self.font = load_image('resource/font_sheet.png')
         self.items = load_image('resource/item_sheet.png')
         self.lives = config.TAPE_START
+        self.reserved = 0       # 날아오는 중인 테이프 수
         self.zone = 'chase'
         self.tip_index = 0
         self.tip_time = 0.0
@@ -47,11 +48,18 @@ class Hud:
         self.tip_index = 0
         self.tip_time = 0.0
 
+    def reserve_slot(self):
+        # 날아오는 중인 테이프의 칸을 미리 잡아 둠, 그 칸 번호를 돌려줌
+        slot = self.lives + self.reserved
+        self.reserved += 1
+        return slot
+
     def add_life(self):
         self.lives = min(self.lives + 1, config.TAPE_MAX)
+        self.reserved = max(self.reserved - 1, 0)
 
     def is_full(self):
-        return self.lives >= config.TAPE_MAX
+        return self.lives + self.reserved >= config.TAPE_MAX
 
     def draw_now(self):
         time_word, place_word = NOW_WORDS[self.zone]
