@@ -32,12 +32,20 @@ def quit():
 
 
 def change_mode(mode):
-    pass
+    if stack:
+        stack.pop().finish()
+    stack.append(mode)
+    mode.init()
 
 
 def push_mode(mode):
-    pass
+    stack.append(mode)
+    mode.init()
 
 
 def pop_mode():
-    pass
+    # 마지막 모드를 꺼내면 실행할 모드가 없으므로 종료 (정리는 run이 함)
+    if len(stack) > 1:
+        stack.pop().finish()
+    else:
+        quit()
