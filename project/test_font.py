@@ -1,4 +1,4 @@
-# 확인용: python test_font.py  (GuruBox 폴더에서 실행)
+# 확인용: python project/test_font.py  (저장소 루트에서 실행)
 from pico2d import *
 from font_data import *
 open_canvas(1600, 900)

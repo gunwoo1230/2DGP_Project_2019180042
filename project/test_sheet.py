@@ -1,4 +1,4 @@
-# 확인용: python test_sheet.py  (이 폴더에서 실행)
+# 확인용: python project/test_sheet.py  (저장소 루트에서 실행)
 from pico2d import *
 from sprite_data import *
 open_canvas(800, 400)
