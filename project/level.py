@@ -1,7 +1,7 @@
 # 레벨: 타일 목록으로 발판과 그릴 것을 만듦
 import camera
 import config
-from tiles import draw_tile, load_images
+from tiles import TILES, Platform, draw_tile, load_images
 
 
 class Level:
@@ -10,6 +10,10 @@ class Level:
         # (타일 이름, 왼쪽 끝 월드 x)
         self.tiles = [(name, config.MAP_LEFT + config.TILE_W * i) for i, name in enumerate(tile_names)]
         self.right = config.MAP_LEFT + config.TILE_W * len(tile_names)
+        # 타일의 발판을 왼쪽 끝만큼 옮겨 월드 좌표로
+        self.platforms = [Platform(kind, x0 + left, y0, x1 + left, y1)
+                          for name, left in self.tiles
+                          for kind, x0, y0, x1, y1 in TILES[name]['platforms']]
 
     def update(self):
         pass

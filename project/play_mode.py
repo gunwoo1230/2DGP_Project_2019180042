@@ -9,6 +9,7 @@ from box import Box
 from dummy import Dummy
 from hud import Background, Hud
 from level import Level
+from map_data import TEST_MAP
 from tape import TapeItem
 
 
@@ -46,7 +47,7 @@ def init():
     hud = Hud()
     game_world.add_object(Background(), game_world.LAYER_BG)
     game_world.add_object(hud, game_world.LAYER_UI)
-    level = Level(['start'] * 11)   # 임시: 발판이 생기면 TEST_MAP으로 교체
+    level = Level(TEST_MAP)
     game_world.add_object(level, game_world.LAYER_MAP)
     box = Box(hud, level)
     game_world.add_object(box, game_world.LAYER_BOX)
