@@ -3,6 +3,7 @@ from pico2d import *
 
 import game_framework
 import game_world
+from ground import Ground
 from hud import Hud
 
 
@@ -17,6 +18,7 @@ def init():
     zone = 'chase'
     hud = Hud()
     game_world.add_object(hud, game_world.LAYER_HUD)
+    game_world.add_object(Ground(), game_world.LAYER_GROUND)
 
 
 def finish():
