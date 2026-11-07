@@ -1,7 +1,7 @@
 # 플레이어 박스
 import math
 
-from pico2d import load_image, SDL_KEYDOWN, SDL_KEYUP, SDLK_LEFT, SDLK_RIGHT
+from pico2d import load_image, SDL_KEYDOWN, SDL_KEYUP, SDLK_LEFT, SDLK_RIGHT, SDLK_SPACE
 
 import config
 import game_framework
@@ -16,6 +16,14 @@ def is_moving(box, event):
 
 def is_stopped(box, event):
     return event[0] == 'KEY' and box.dir == 0
+
+
+def space_down(box, event):
+    return event[0] == 'KEY' and event[1].type == SDL_KEYDOWN and event[1].key == SDLK_SPACE
+
+
+def space_up(box, event):
+    return event[0] == 'KEY' and event[1].type == SDL_KEYUP and event[1].key == SDLK_SPACE
 
 
 class Idle:
@@ -68,6 +76,42 @@ class Walk:
         draw_box(box.sheet, 'jump', box.frame, box.x, box.y + Walk.hop_offset(box), flip=box.face_dir < 0)
 
 
+class Charge:
+    @staticmethod
+    def enter(box, event):
+        pass
+
+    @staticmethod
+    def exit(box, event):
+        pass
+
+    @staticmethod
+    def do(box):
+        pass
+
+    @staticmethod
+    def draw(box):
+        pass
+
+
+class Jump:
+    @staticmethod
+    def enter(box, event):
+        pass
+
+    @staticmethod
+    def exit(box, event):
+        pass
+
+    @staticmethod
+    def do(box):
+        pass
+
+    @staticmethod
+    def draw(box):
+        pass
+
+
 class Box:
     def __init__(self):
         self.sheet = load_image('resource/box_sheet.png')
@@ -79,8 +123,9 @@ class Box:
         self.frame = 0
         self.on_accel_ground = False    # 가속 지형 위 여부 (1주차엔 항상 False)
         self.state_machine = StateMachine(self, Idle, {
-            Idle: [(is_moving, Walk)],
-            Walk: [(is_stopped, Idle)],
+            Idle: [(space_down, Charge), (is_moving, Walk)],
+            Walk: [(space_down, Charge), (is_stopped, Idle)],
+            Charge: [(space_up, Idle)],     # 임시 규칙: 점프를 채울 때 교체
         })
 
     def update(self):
