@@ -182,6 +182,42 @@ class Jump:
         draw_box(box.sheet, 'jump', Jump.sheet_frame(box), camera.to_screen(box.x), box.y, flip=box.face_dir < 0)
 
 
+class Fall:
+    @staticmethod
+    def enter(box, event):
+        pass
+
+    @staticmethod
+    def exit(box, event):
+        pass
+
+    @staticmethod
+    def do(box):
+        pass
+
+    @staticmethod
+    def draw(box):
+        pass
+
+
+class Recover:
+    @staticmethod
+    def enter(box, event):
+        pass
+
+    @staticmethod
+    def exit(box, event):
+        pass
+
+    @staticmethod
+    def do(box):
+        pass
+
+    @staticmethod
+    def draw(box):
+        pass
+
+
 class Get:
     FRAMES = BOX_ANIM['get'][1]
 
