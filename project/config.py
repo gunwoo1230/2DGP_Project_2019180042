@@ -8,6 +8,7 @@ GROUND_Y = 210                          # 테스트 바닥 (도로 높이)
 SPRITE_SCALE = 0.6                      # 스프라이트 그리기 배율
 
 # 박스 이동
+BOX_START_X = 200                       # 시작 위치
 WALK_SPEED = 310                        # px/s
 HOP_HEIGHT = 10                         # 걷기 깡충 높이(그림만)
 CHARGE_MAX_TIME = 0.6                   # 초
