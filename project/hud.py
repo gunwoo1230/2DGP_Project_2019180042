@@ -94,7 +94,7 @@ class Hud:
         font_data.draw_now(self.font, time_word, place_word, config.UI_NOW_X, config.UI_HEADER_Y)
 
     def draw_time(self):
-        # 1주차는 0일 0시간 0분 고정 (시계는 3주차)
+        # 아직 0일 0시간 0분 고정 (시계는 3주차)
         for x in (config.UI_DAY_X, config.UI_HOUR_X, config.UI_MIN_X):
             font_data.draw_number(self.font, 0, x, config.UI_HEADER_Y)
 
