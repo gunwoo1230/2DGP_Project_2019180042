@@ -125,10 +125,14 @@ class Charge:
 class Jump:
     @staticmethod
     def enter(box, event):
-        height = config.JUMP_MIN_H + (config.JUMP_MAX_H - config.JUMP_MIN_H) * box.charge_ratio()
-        box.vy = math.sqrt(2 * config.GRAVITY * height)
+        if event and event[0] == 'KEY':
+            height = config.JUMP_MIN_H + (config.JUMP_MAX_H - config.JUMP_MIN_H) * box.charge_ratio()
+            box.vy = math.sqrt(2 * config.GRAVITY * height)
+            box.vx = box.dir * box.charge_speed()   # 시작 가로 속도 = 그때의 이동 속도
+        else:
+            box.vy = 0      # 발판에서 벗어남: 위로 뛰지 않고 가로 속도 유지
         box.jump_vy = box.vy    # 점프 시작 속도 (높이가 달라도 같은 비율로 그림을 넘기는 기준)
-        box.vx = box.dir * box.charge_speed()   # 시작 가로 속도 = 그때의 이동 속도
+        box.ground = None
 
     @staticmethod
     def exit(box, event):
@@ -285,6 +289,12 @@ class Box:
         self.near_tape = None
         self.slam_cooldown = 0.0
         self.state_machine.reset(Walk if self.dir != 0 else Idle)
+
+    def drop_to(self, y):
+        # 디버그: 그 높이 + 1px에서 공중으로 시작
+        self.y = y + 1
+        self.vx = 0.0
+        self.state_machine.reset(Jump)
 
     def update(self):
         self.near_tape = None   # 이번 프레임의 충돌 처리에서 다시 기록됨

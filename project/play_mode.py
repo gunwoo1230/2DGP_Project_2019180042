@@ -12,6 +12,9 @@ from level import Level
 from map_data import TEST_MAP
 from tape import TapeItem
 
+# 디버그: 지금 x에서 이 높이로 옮겨 떨어뜨림
+DROP_KEYS = {SDLK_1: config.ROAD_Y, SDLK_2: config.LEDGE_Y, SDLK_3: config.ROOF_Y}
+
 
 def toggle_zone():
     global zone
@@ -89,5 +92,7 @@ def handle_events():
             show_collision_boxes = not show_collision_boxes
         elif event.type == SDL_KEYDOWN and event.key == SDLK_r:
             reset()
+        elif event.type == SDL_KEYDOWN and event.key in DROP_KEYS:
+            box.drop_to(DROP_KEYS[event.key])
         else:
             box.handle_event(event)
