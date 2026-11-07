@@ -1,4 +1,6 @@
 # 건물 타일: 타일 정의, 발판, 타일 그리기
+import math
+
 from pico2d import load_image
 
 import camera
@@ -62,10 +64,20 @@ def load_images():
         images['roof'] = load_image('resource/placeholder/ph_roof.png')
         images['ledge'] = load_image('resource/placeholder/ph_ledge.png')
         images['peg'] = load_image('resource/placeholder/ph_peg.png')
+        images['accel'] = load_image('resource/placeholder/ph_accel.png')
 
 
 def draw_rect(image, x0, y0, x1, y1):
     image.draw((x0 + x1) / 2, (y0 + y1) / 2, x1 - x0, y1 - y0)
+
+
+def draw_slope(image, x0, y0, x1, y1, thick):
+    # 윗면이 선분에 오도록, 가운데를 두께의 절반만큼 선분 아래쪽 수직 방향으로 내림
+    dx, dy = x1 - x0, y1 - y0
+    length = math.hypot(dx, dy)
+    cx = (x0 + x1) / 2 + dy / length * thick / 2
+    cy = (y0 + y1) / 2 - dx / length * thick / 2
+    image.composite_draw(math.atan2(dy, dx), '', cx, cy, length, thick)
 
 
 def draw_tile(name, left):
@@ -81,3 +93,5 @@ def draw_tile(name, left):
         if kind in ('roof', 'ledge', 'peg'):
             # 윗면이 발판 선에 오도록 두께만큼 아래로
             draw_rect(images[kind], screen_left + x0, y0 - config.PLATFORM_THICK[kind], screen_left + x1, y0)
+        elif kind == 'accel':
+            draw_slope(images[kind], screen_left + x0, y0, screen_left + x1, y1, config.PLATFORM_THICK[kind])
