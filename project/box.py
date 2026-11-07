@@ -404,7 +404,9 @@ class Box:
         dt = game_framework.frame_time
         prev_x, prev_y = self.x, self.y
         # 공중 좌우 조작: 입력이 있으면 목표 속도로 천천히 변함, 없으면 유지
-        if self.dir != 0:
+        # 같은 방향으로 걷는 속도보다 빠르면 줄이지 않음 (가속 지붕에서 얻은 속도 유지)
+        keeps_speed = self.vx * self.dir > 0 and abs(self.vx) > config.WALK_SPEED
+        if self.dir != 0 and not keeps_speed:
             diff = self.dir * config.WALK_SPEED - self.vx
             change = config.AIR_ACCEL * dt
             self.vx += diff if abs(diff) <= change else math.copysign(change, diff)
