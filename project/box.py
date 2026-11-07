@@ -3,6 +3,7 @@ import math
 
 from pico2d import load_image, SDL_KEYDOWN, SDL_KEYUP, SDLK_LEFT, SDLK_RIGHT, SDLK_SPACE, SDLK_LSHIFT, SDLK_RSHIFT
 
+import camera
 import config
 import game_framework
 import game_world
@@ -64,7 +65,7 @@ class Idle:
 
     @staticmethod
     def draw(box):
-        draw_box(box.sheet, 'idle', box.frame, box.x, box.y, flip=box.face_dir < 0)
+        draw_box(box.sheet, 'idle', box.frame, camera.to_screen(box.x), box.y, flip=box.face_dir < 0)
 
 
 class Walk:
@@ -95,7 +96,7 @@ class Walk:
 
     @staticmethod
     def draw(box):
-        draw_box(box.sheet, 'jump', box.frame, box.x, box.y + Walk.hop_offset(box), flip=box.face_dir < 0)
+        draw_box(box.sheet, 'jump', box.frame, camera.to_screen(box.x), box.y + Walk.hop_offset(box), flip=box.face_dir < 0)
 
 
 class Charge:
@@ -117,7 +118,7 @@ class Charge:
     @staticmethod
     def draw(box):
         c = box.charge_ratio()
-        draw_box(box.sheet, 'charge', 0, box.x, box.y, flip=box.face_dir < 0,
+        draw_box(box.sheet, 'charge', 0, camera.to_screen(box.x), box.y, flip=box.face_dir < 0,
                  sx=1 + config.CHARGE_SQUASH_X * c, sy=1 - config.CHARGE_SQUASH_Y * c)
 
 
@@ -160,7 +161,7 @@ class Jump:
 
     @staticmethod
     def draw(box):
-        draw_box(box.sheet, 'jump', Jump.sheet_frame(box), box.x, box.y, flip=box.face_dir < 0)
+        draw_box(box.sheet, 'jump', Jump.sheet_frame(box), camera.to_screen(box.x), box.y, flip=box.face_dir < 0)
 
 
 class Get:
@@ -188,7 +189,7 @@ class Get:
     def draw(box):
         # 시간 동안 한 번 재생하고 마지막 장에서 멈춤 (정면이라 반전 없음)
         frame = min(int(box.get_time / config.TAPE_PICKUP_TIME * Get.FRAMES), Get.FRAMES - 1)
-        draw_box(box.sheet, 'get', frame, box.x, box.y)
+        draw_box(box.sheet, 'get', frame, camera.to_screen(box.x), box.y)
 
 
 class Slam:
@@ -236,11 +237,11 @@ class Slam:
         if box.slam_returning:
             # 튕김은 그림 위치만 움직임 (실제 y는 그대로), 진행 방향 반대로 기울임
             hop = config.SLAM_BOUNCE_H * math.sin(math.pi * Slam.return_ratio(box))
-            draw_box(box.sheet, 'slam', 0, box.x, box.y + hop, flip=box.slam_dir < 0,
+            draw_box(box.sheet, 'slam', 0, camera.to_screen(box.x), box.y + hop, flip=box.slam_dir < 0,
                      rot=box.slam_dir * config.SLAM_ROT)
         else:
             # 진행 방향으로 기울임 (rot 양수가 반시계)
-            draw_box(box.sheet, 'slam', 0, box.x, box.y, flip=box.slam_dir < 0,
+            draw_box(box.sheet, 'slam', 0, camera.to_screen(box.x), box.y, flip=box.slam_dir < 0,
                      sx=config.SLAM_SX, sy=config.SLAM_SY, rot=-box.slam_dir * config.SLAM_ROT)
 
 

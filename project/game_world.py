@@ -1,6 +1,8 @@
 # 게임 월드: 레이어별 객체 목록과 충돌 처리
 from pico2d import draw_rectangle
 
+import camera
+
 # 그리기 레이어 (아래부터)
 LAYER_BG, LAYER_MAP, LAYER_ITEM, LAYER_BOX, LAYER_FX, LAYER_UI = range(6)
 
@@ -68,7 +70,8 @@ def draw_collision_boxes():
         for group in pair:
             for obj in group:
                 if obj not in drawn:
-                    draw_rectangle(*obj.get_bb())
+                    left, bottom, right, top = obj.get_bb()
+                    draw_rectangle(camera.to_screen(left), bottom, camera.to_screen(right), top)
                     drawn.append(obj)
 
 

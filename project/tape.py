@@ -3,6 +3,7 @@ import math
 
 from pico2d import load_image
 
+import camera
 import config
 import game_framework
 import game_world
@@ -30,7 +31,8 @@ class TapeItem:
         return config.TAPE_BOB_H * math.sin(2 * math.pi * self.bob_time / config.TAPE_BOB_TIME)
 
     def draw(self):
-        draw_item(TapeItem.image, 'tape', 0, self.x, self.y + self.bob_offset())
+        if camera.visible(self.x):
+            draw_item(TapeItem.image, 'tape', 0, camera.to_screen(self.x), self.y + self.bob_offset())
 
     def get_bb(self):
         half_w = TAPE_W * config.TAPE_BB_RATE / 2

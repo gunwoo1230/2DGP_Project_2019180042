@@ -3,6 +3,7 @@ import math
 
 from pico2d import load_font, load_image
 
+import camera
 import config
 import game_framework
 
@@ -30,10 +31,13 @@ class Dummy:
         return config.DUMMY_SHAKE * math.sin(4 * math.pi * passed / config.DUMMY_HIT_TIME)
 
     def draw(self):
-        self.image.draw(self.x + self.shake_offset(), self.y, config.DUMMY_W, config.DUMMY_H)
+        if not camera.visible(self.x):
+            return
+        screen_x = camera.to_screen(self.x)
+        self.image.draw(screen_x + self.shake_offset(), self.y, config.DUMMY_W, config.DUMMY_H)
         # 머리 위에 맞은 횟수 표시 (디버그 글자)
         text_y = self.y + config.DUMMY_H / 2 + config.DUMMY_TEXT_GAP
-        self.font.draw(self.x, text_y, str(self.hit_count), (40, 40, 40))
+        self.font.draw(screen_x, text_y, str(self.hit_count), (40, 40, 40))
 
     def get_bb(self):
         half_w, half_h = config.DUMMY_W / 2, config.DUMMY_H / 2

@@ -23,8 +23,9 @@ def follow(box_x):
 
 
 def to_screen(world_x):
-    pass
+    return world_x - x
 
 
 def visible(world_x):
-    pass
+    # 화면 밖 물체는 그리지 않음
+    return -config.DRAW_MARGIN <= to_screen(world_x) <= config.SCREEN_W + config.DRAW_MARGIN
