@@ -1,0 +1,8 @@
+# 파이썬 실행할 때 자동으로 생기는 파일
+__pycache__/
+*.pyc
+
+# 편집기·운영체제 파일
+.idea/
+Thumbs.db
+.DS_Store
