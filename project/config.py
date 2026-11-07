@@ -40,6 +40,7 @@ SLAM_SX, SLAM_SY, SLAM_ROT = 1.2, 0.85, 0.15            # 임시 그림 배율, 
 # 허수아비
 DUMMY_X, DUMMY_W, DUMMY_H = 1200, 84, 144
 DUMMY_HIT_TIME, DUMMY_SHAKE = 0.15, 4   # 초, px
+DUMMY_FONT_SIZE, DUMMY_TEXT_GAP = 32, 24    # 맞은 횟수 글자 크기, 머리 위 간격
 
 # 그림일기 화면
 UI_LIFE_X, UI_LIFE_GAP, UI_LIFE_Y = 60, 56, 772         # 생명 칸

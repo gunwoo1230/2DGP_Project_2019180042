@@ -197,6 +197,7 @@ class Slam:
         box.slam_time = 0.0
         box.slam_start_x = box.x
         box.slam_dir = box.face_dir
+        box.slam_hit = False    # 돌진 한 번에 1회만 맞음
 
     @staticmethod
     def exit(box, event):
@@ -302,3 +303,7 @@ class Box:
     def handle_collision(self, group, other):
         if group == 'box:tape':
             self.near_tape = other
+        elif group == 'box:dummy':
+            if self.state_machine.cur is Slam and not self.slam_hit:
+                self.slam_hit = True
+                other.on_hit()
