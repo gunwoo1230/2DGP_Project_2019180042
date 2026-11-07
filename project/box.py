@@ -244,6 +244,15 @@ class Box:
             Get: [(done_moving, Walk), (done_stopped, Idle)],
         })
 
+    def reset(self):
+        # 위치·상태를 처음으로 (키 눌림 상태와 구간은 유지)
+        self.x, self.y = config.BOX_START_X, config.GROUND_Y
+        self.vx, self.vy = 0.0, 0.0
+        self.face_dir = self.dir if self.dir != 0 else 1
+        self.near_tape = None
+        self.slam_cooldown = 0.0
+        self.state_machine.reset(Walk if self.dir != 0 else Idle)
+
     def update(self):
         self.near_tape = None   # 이번 프레임의 충돌 처리에서 다시 기록됨
         self.slam_cooldown = max(self.slam_cooldown - game_framework.frame_time, 0)

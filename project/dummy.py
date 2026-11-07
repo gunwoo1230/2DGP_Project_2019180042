@@ -8,9 +8,14 @@ import game_framework
 
 
 class Dummy:
+    image = None
+    font = None
+
     def __init__(self):
-        self.image = load_image('resource/placeholder/ph_dummy.png')
-        self.font = load_font('resource/font/Gaegu-Bold.ttf', config.DUMMY_FONT_SIZE)
+        # 리셋할 때 다시 만들어도 한 번만 불러옴
+        if Dummy.image is None:
+            Dummy.image = load_image('resource/placeholder/ph_dummy.png')
+            Dummy.font = load_font('resource/font/Gaegu-Bold.ttf', config.DUMMY_FONT_SIZE)
         self.x = config.DUMMY_X
         self.y = config.GROUND_Y + config.DUMMY_H / 2   # 그림의 가운데
         self.hit_count = 0

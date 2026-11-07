@@ -48,6 +48,10 @@ class Hud:
         self.tip_index = 0
         self.tip_time = 0.0
 
+    def reset_lives(self):
+        self.lives = config.TAPE_START
+        self.reserved = 0
+
     def reserve_slot(self):
         # 날아오는 중인 테이프의 칸을 미리 잡아 둠, 그 칸 번호를 돌려줌
         slot = self.lives + self.reserved

@@ -21,6 +21,11 @@ def remove_object(obj):
     raise ValueError('게임 월드에 없는 객체입니다')
 
 
+def remove_layer(layer):
+    for obj in objects[layer][:]:
+        remove_object(obj)
+
+
 def remove_from_collisions(obj):
     for pair in collision_pairs.values():
         for group in pair:

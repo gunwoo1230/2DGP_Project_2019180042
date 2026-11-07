@@ -10,6 +10,11 @@ class StateMachine:
         self.rules = rules
         self.cur.enter(self.owner, None)
 
+    def reset(self, state):
+        # 지금 상태의 exit 없이 바로 시작 상태로 (리셋용)
+        self.cur = state
+        self.cur.enter(self.owner, None)
+
     def update(self):
         self.cur.do(self.owner)
 
