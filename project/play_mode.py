@@ -3,10 +3,13 @@ from pico2d import *
 
 import game_framework
 import game_world
+from hud import Hud
 
 
 def init():
-    pass
+    global hud
+    hud = Hud()
+    game_world.add_object(hud, game_world.LAYER_HUD)
 
 
 def finish():
