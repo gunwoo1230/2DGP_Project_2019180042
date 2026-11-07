@@ -45,7 +45,7 @@ def can_pick_tape(box, event):
 
 
 def can_slam(box, event):
-    return shift_down(box, event) and box.zone == 'boss'
+    return shift_down(box, event) and box.zone == 'boss' and box.slam_cooldown <= 0
 
 
 class Idle:
@@ -201,7 +201,7 @@ class Slam:
 
     @staticmethod
     def exit(box, event):
-        pass
+        box.slam_cooldown = config.SLAM_COOLDOWN    # 돌진 끝난 뒤부터 쿨타임
 
     @staticmethod
     def do(box):
@@ -233,6 +233,7 @@ class Box:
         self.charge_time = 0.0
         self.vx, self.vy = 0.0, 0.0
         self.near_tape = None   # 지금 겹쳐 있는 테이프
+        self.slam_cooldown = 0.0
         self.on_accel_ground = False    # 가속 지형 위 여부 (1주차엔 항상 False)
         self.state_machine = StateMachine(self, Idle, {
             Idle: [(space_down, Charge), (can_pick_tape, Get), (can_slam, Slam), (is_moving, Walk)],
@@ -245,6 +246,7 @@ class Box:
 
     def update(self):
         self.near_tape = None   # 이번 프레임의 충돌 처리에서 다시 기록됨
+        self.slam_cooldown = max(self.slam_cooldown - game_framework.frame_time, 0)
         self.state_machine.update()
 
     def draw(self):
