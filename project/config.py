@@ -41,3 +41,4 @@ UI_LIFE_X, UI_LIFE_GAP, UI_LIFE_Y = 60, 56, 772         # 생명 칸
 UI_HEADER_Y, UI_NOW_X = 856, 868                        # 위쪽 칸 글자 높이, 지금 칸 가운데
 UI_DAY_X, UI_HOUR_X, UI_MIN_X = 1218, 1328, 1474        # 도망친 지 칸 숫자 가운데
 TIP_INTERVAL, TIP_CHAR_TIME = 6, 0.05   # 팁 바뀌는 간격, 한 글자 써지는 시간 (초)
+UI_TIP_X, UI_TIP_Y = 52.5, 54           # 원고지 첫 칸 가운데

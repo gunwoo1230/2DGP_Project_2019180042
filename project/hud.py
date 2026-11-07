@@ -49,7 +49,8 @@ class Hud:
             font_data.draw_number(self.font, 0, x, config.UI_HEADER_Y)
 
     def draw_tip(self):
-        pass
+        tip_key = font_data.TIP_LIST['day'][0]
+        font_data.draw_tip(self.font, font_data.TIPS[tip_key], config.UI_TIP_X, config.UI_TIP_Y)
 
     def draw_lives(self):
         pass
