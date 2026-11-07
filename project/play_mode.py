@@ -28,7 +28,9 @@ def init():
     game_world.add_collision_pair('box:tape', box, None)
     game_world.add_collision_pair('box:dummy', box, None)
     for x in config.TAPE_XS:
-        game_world.add_object(TapeItem(x), game_world.LAYER_ITEM)
+        tape = TapeItem(x)
+        game_world.add_object(tape, game_world.LAYER_ITEM)
+        game_world.add_collision_pair('box:tape', None, tape)
 
 
 def finish():
