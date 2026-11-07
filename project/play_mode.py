@@ -7,7 +7,7 @@ import game_world
 from box import Box
 from dummy import Dummy
 from ground import Ground
-from hud import Hud
+from hud import Background, Hud
 from tape import TapeItem
 
 
@@ -42,7 +42,8 @@ def init():
     show_collision_boxes = False
     zone = 'chase'
     hud = Hud()
-    game_world.add_object(hud, game_world.LAYER_BG)
+    game_world.add_object(Background(), game_world.LAYER_BG)
+    game_world.add_object(hud, game_world.LAYER_UI)
     game_world.add_object(Ground(), game_world.LAYER_MAP)
     box = Box(hud)
     game_world.add_object(box, game_world.LAYER_BOX)

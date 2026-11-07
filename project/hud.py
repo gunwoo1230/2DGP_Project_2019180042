@@ -1,4 +1,4 @@
-# 그림일기 화면: 배경, 지금·도망친 지, 원고지 팁, 테이프 생명 칸
+# 그림일기 화면: 배경(맨 아래)과 지금·도망친 지, 원고지 팁, 테이프 생명 칸(맨 위)
 from pico2d import load_image
 
 import config
@@ -12,9 +12,25 @@ NOW_WORDS = {'chase': ('낮', '주택가'), 'boss': ('저녁', '공원')}
 TIP_LISTS = {'chase': font_data.TIP_LIST['day'], 'boss': font_data.TIP_LIST['boss']}
 
 
+class Background:
+    def __init__(self):
+        self.image = load_image('resource/diary_frame.png')
+
+    def update(self):
+        pass
+
+    def draw(self):
+        self.image.draw(config.SCREEN_W / 2, config.SCREEN_H / 2)
+
+    def get_bb(self):
+        pass
+
+    def handle_collision(self, group, other):
+        pass
+
+
 class Hud:
     def __init__(self):
-        self.frame = load_image('resource/diary_frame.png')
         self.font = load_image('resource/font_sheet.png')
         self.items = load_image('resource/item_sheet.png')
         self.lives = config.TAPE_START
@@ -30,7 +46,6 @@ class Hud:
             self.tip_index = (self.tip_index + 1) % len(TIP_LISTS[self.zone])
 
     def draw(self):
-        self.frame.draw(config.SCREEN_W / 2, config.SCREEN_H / 2)
         self.draw_now()
         self.draw_time()
         self.draw_tip()
