@@ -97,7 +97,7 @@ class Walk:
     @staticmethod
     def do(box):
         dt = game_framework.frame_time
-        box.vx = box.dir * config.WALK_SPEED
+        box.vx = box.dir * box.walk_speed()
         box.x += box.vx * dt
         box.clamp_x()
         box.frame = (box.frame + config.ANIM_FPS_MOVE * dt) % Walk.FRAMES
@@ -355,7 +355,7 @@ class Box:
         self.ground = None      # 서 있는 발판
         self.near_tape = None   # 지금 겹쳐 있는 테이프
         self.slam_cooldown = 0.0
-        self.on_accel_ground = False    # 가속 지형 위 여부 (1주차엔 항상 False)
+        self.on_accel_ground = False    # 가속 지붕 위 여부
         self.state_machine = StateMachine(self, Idle, {
             Idle: [(is_air, Jump), (space_down, Charge), (can_pick_tape, Get), (can_slam, Slam), (is_moving, Walk)],
             Walk: [(is_air, Jump), (space_down, Charge), (can_pick_tape, Get), (can_slam, Slam), (is_stopped, Idle)],
@@ -372,6 +372,7 @@ class Box:
         self.x, self.y = config.BOX_START_X, config.ROAD_Y
         self.vx, self.vy = 0.0, 0.0
         self.ground = None
+        self.on_accel_ground = False
         self.face_dir = self.dir if self.dir != 0 else 1
         self.near_tape = None
         self.slam_cooldown = 0.0
@@ -381,6 +382,7 @@ class Box:
         # 디버그: 그 x의 도로 위로 옮김
         self.x, self.y = x, config.ROAD_Y
         self.vx, self.vy = 0.0, 0.0
+        self.on_accel_ground = False
         self.state_machine.reset(Walk if self.dir != 0 else Idle)
 
     def drop_to(self, y):
@@ -424,6 +426,7 @@ class Box:
         if platform:
             self.y = platform.surface_y(self.x)
             self.ground = platform
+            self.on_accel_ground = platform.kind == 'accel'
         else:
             self.state_machine.handle_event(('AIR', None))
 
@@ -444,6 +447,12 @@ class Box:
     def charge_ratio(self):
         # 차지 비율 c (0~1)
         return min(self.charge_time / config.CHARGE_MAX_TIME, 1)
+
+    def walk_speed(self):
+        # 가속 지붕 위에서 오른쪽으로 갈 때만 빠름
+        if self.on_accel_ground and self.dir > 0:
+            return config.WALK_SPEED * config.ACCEL_RATE
+        return config.WALK_SPEED
 
     def charge_speed(self):
         # 차지 중 이동 속도 (가속 지형 위에서는 감속 없음)
