@@ -13,6 +13,7 @@ WALK_SPEED = 310                        # px/s
 HOP_HEIGHT = 10                         # 걷기 깡충 높이(그림만)
 CHARGE_MAX_TIME = 0.6                   # 초
 CHARGE_SPEED_RATE = 0.4                 # 차지 중 이동 속도 배율
+CHARGE_SQUASH_X, CHARGE_SQUASH_Y = 0.20, 0.25   # 최대 차지 때 가로로 늘고 세로로 주는 비율
 JUMP_MIN_H, JUMP_MAX_H = 48, 150        # px
 GRAVITY = 2400                          # px/s²
 AIR_ACCEL = 1080                        # px/s²

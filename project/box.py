@@ -79,7 +79,7 @@ class Walk:
 class Charge:
     @staticmethod
     def enter(box, event):
-        pass
+        box.charge_time = 0.0
 
     @staticmethod
     def exit(box, event):
@@ -87,11 +87,16 @@ class Charge:
 
     @staticmethod
     def do(box):
-        pass
+        dt = game_framework.frame_time
+        box.charge_time += dt
+        box.x += box.dir * box.charge_speed() * dt
+        box.clamp_x()
 
     @staticmethod
     def draw(box):
-        pass
+        c = box.charge_ratio()
+        draw_box(box.sheet, 'charge', 0, box.x, box.y, flip=box.face_dir < 0,
+                 sx=1 + config.CHARGE_SQUASH_X * c, sy=1 - config.CHARGE_SQUASH_Y * c)
 
 
 class Jump:
@@ -121,6 +126,7 @@ class Box:
         self.dir = 0            # 지금 이동할 방향 (-1, 0, 1)
         self.face_dir = 1       # 바라보는 방향
         self.frame = 0
+        self.charge_time = 0.0
         self.on_accel_ground = False    # 가속 지형 위 여부 (1주차엔 항상 False)
         self.state_machine = StateMachine(self, Idle, {
             Idle: [(space_down, Charge), (is_moving, Walk)],
@@ -143,6 +149,16 @@ class Box:
         if event.key in (SDLK_LEFT, SDLK_RIGHT):
             self.update_dir(event)
         self.state_machine.handle_event(('KEY', event))
+
+    def charge_ratio(self):
+        # 차지 비율 c (0~1)
+        return min(self.charge_time / config.CHARGE_MAX_TIME, 1)
+
+    def charge_speed(self):
+        # 차지 중 이동 속도 (가속 지형 위에서는 감속 없음)
+        if self.on_accel_ground:
+            return config.WALK_SPEED
+        return config.WALK_SPEED * config.CHARGE_SPEED_RATE
 
     def clamp_x(self):
         # 플레이 칸 좌우 끝을 넘지 못함
