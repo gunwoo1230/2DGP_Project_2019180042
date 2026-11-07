@@ -40,10 +40,6 @@ def shift_down(box, event):
     return event[0] == 'KEY' and event[1].type == SDL_KEYDOWN and event[1].key in (SDLK_LSHIFT, SDLK_RSHIFT)
 
 
-def shift_up(box, event):
-    return event[0] == 'KEY' and event[1].type == SDL_KEYUP and event[1].key in (SDLK_LSHIFT, SDLK_RSHIFT)
-
-
 def can_pick_tape(box, event):
     return shift_down(box, event) and box.zone == 'chase' and box.near_tape is not None and not box.hud.is_full()
 
@@ -198,7 +194,9 @@ class Get:
 class Slam:
     @staticmethod
     def enter(box, event):
-        pass
+        box.slam_time = 0.0
+        box.slam_start_x = box.x
+        box.slam_dir = box.face_dir
 
     @staticmethod
     def exit(box, event):
@@ -206,11 +204,16 @@ class Slam:
 
     @staticmethod
     def do(box):
-        pass
+        box.slam_time += game_framework.frame_time
+        p = min(box.slam_time / config.SLAM_TIME, 1)
+        box.x = box.slam_start_x + box.slam_dir * config.SLAM_DIST * p
+        box.clamp_x()
+        if p >= 1:
+            box.state_machine.handle_event(('DONE', None))
 
     @staticmethod
     def draw(box):
-        pass
+        draw_box(box.sheet, 'slam', 0, box.x, box.y, flip=box.slam_dir < 0)
 
 
 class Box:
@@ -231,7 +234,7 @@ class Box:
         self.state_machine = StateMachine(self, Idle, {
             Idle: [(space_down, Charge), (can_pick_tape, Get), (can_slam, Slam), (is_moving, Walk)],
             Walk: [(space_down, Charge), (can_pick_tape, Get), (can_slam, Slam), (is_stopped, Idle)],
-            Slam: [(shift_up, Idle)],       # 임시 규칙: 돌진을 채울 때 교체
+            Slam: [(done_moving, Walk), (done_stopped, Idle)],
             Charge: [(space_up, Jump)],
             Jump: [(done_moving, Walk), (done_stopped, Idle)],
             Get: [(done_moving, Walk), (done_stopped, Idle)],
