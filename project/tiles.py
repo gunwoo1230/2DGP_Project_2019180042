@@ -59,6 +59,9 @@ def load_images():
         images['road'] = load_image('resource/placeholder/ph_ground.png')
         images['wall'] = load_image('resource/placeholder/ph_wall.png')
         images['deco'] = load_image('resource/placeholder/ph_pipe.png')
+        images['roof'] = load_image('resource/placeholder/ph_roof.png')
+        images['ledge'] = load_image('resource/placeholder/ph_ledge.png')
+        images['peg'] = load_image('resource/placeholder/ph_peg.png')
 
 
 def draw_rect(image, x0, y0, x1, y1):
@@ -74,3 +77,7 @@ def draw_tile(name, left):
         draw_rect(images['wall'], screen_left + x0, ROAD_Y, screen_left + x1, ROOF_Y)
     for _, x0, y0, x1, y1 in tile['deco']:
         draw_rect(images['deco'], screen_left + x0, y0, screen_left + x1, y1)
+    for kind, x0, y0, x1, y1 in tile['platforms']:
+        if kind in ('roof', 'ledge', 'peg'):
+            # 윗면이 발판 선에 오도록 두께만큼 아래로
+            draw_rect(images[kind], screen_left + x0, y0 - config.PLATFORM_THICK[kind], screen_left + x1, y0)
