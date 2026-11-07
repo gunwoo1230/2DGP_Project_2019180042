@@ -2,6 +2,7 @@
 from pico2d import *
 
 import game_framework
+import game_world
 
 
 def init():
@@ -13,11 +14,12 @@ def finish():
 
 
 def update():
-    pass
+    game_world.update()
 
 
 def draw():
     clear_canvas()
+    game_world.draw()
     update_canvas()
 
 
