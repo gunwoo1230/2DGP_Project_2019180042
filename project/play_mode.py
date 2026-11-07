@@ -5,6 +5,7 @@ import config
 import game_framework
 import game_world
 from box import Box
+from dummy import Dummy
 from ground import Ground
 from hud import Hud
 from tape import TapeItem
@@ -32,6 +33,7 @@ def init():
         tape = TapeItem(x)
         game_world.add_object(tape, game_world.LAYER_ITEM)
         game_world.add_collision_pair('box:tape', None, tape)
+    game_world.add_object(Dummy(), game_world.LAYER_ITEM)
 
 
 def finish():
