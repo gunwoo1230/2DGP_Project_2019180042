@@ -9,7 +9,7 @@ from box import Box
 from dummy import Dummy
 from hud import Background, Hud
 from level import Level
-from map_data import TEST_MAP
+from map_data import DAY_MAP
 from tape import TapeItem
 
 # 디버그: 지금 x에서 이 높이로 옮겨 떨어뜨림
@@ -50,7 +50,7 @@ def init():
     hud = Hud()
     game_world.add_object(Background(), game_world.LAYER_BG)
     game_world.add_object(hud, game_world.LAYER_UI)
-    level = Level(TEST_MAP)
+    level = Level(DAY_MAP)
     game_world.add_object(level, game_world.LAYER_MAP)
     box = Box(hud, level)
     game_world.add_object(box, game_world.LAYER_BOX)
