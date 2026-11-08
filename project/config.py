@@ -83,5 +83,6 @@ UI_TIP_X, UI_TIP_Y = 52.5, 54           # 원고지 첫 칸 가운데
 MARKER_X, MARKER_Y = 70, 360            # 화면 밖 경비원 표시 가운데 (왼쪽 가운데)
 MARKER_SIZE, MARKER_MIN_SCALE, MARKER_FAR = 64, 0.35, 1000  # 기본 크기, 가장 작은 배율, 이 거리부터 가장 작음
 MARKER_ARROW_SCALE, MARKER_ARROW_GAP = 0.5, 4   # 화살표 배율, 네모와의 간격(px)
+MARKER_BLINK_DIST, MARKER_BLINK_TIME = 200, 0.15    # 이 거리 이하면 깜빡임, 깜빡이는 간격(초)
 FRAME_STRIP_W = 27                    # 테두리 덮개 폭
 FRAME_STRIP_BOTTOM, FRAME_STRIP_TOP = 100, 820      # 테두리 덮개 위아래

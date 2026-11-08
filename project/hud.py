@@ -59,9 +59,14 @@ class GuardMarker:
         self.image = load_image('resource/placeholder/ph_guard.png')
         self.font = load_image('resource/font_sheet.png')
         self.guard = guard
+        self.blink_time = 0.0   # 깜빡임 거리 안에 들어온 뒤 지난 시간
 
     def update(self):
-        pass
+        # 깜빡임 거리 밖으로 나가면 처음부터 (들어오는 순간은 보이는 상태)
+        if 0 < self.offscreen() <= config.MARKER_BLINK_DIST:
+            self.blink_time += game_framework.frame_time
+        else:
+            self.blink_time = 0.0
 
     def offscreen(self):
         # 경비원 오른쪽 끝이 플레이 칸 왼쪽 끝보다 얼마나 밖에 있는지 (0 이하면 화면 안)
@@ -78,7 +83,10 @@ class GuardMarker:
         off = self.offscreen()
         if off <= 0:
             return
-        size = config.MARKER_SIZE * self.scale(off)
+        # 아주 가까우면 MARKER_BLINK_TIME마다 숨김 (네모와 화살표 함께)
+        if off <= config.MARKER_BLINK_DIST and int(self.blink_time / config.MARKER_BLINK_TIME) % 2 == 1:
+            return
+        size =config.MARKER_SIZE * self.scale(off)
         self.image.draw(config.MARKER_X, config.MARKER_Y, size, size)
         # 네모 왼쪽에 붙는 ← (크기는 그대로)
         l, b, w, h = font_data.CELL_RECT['←']
