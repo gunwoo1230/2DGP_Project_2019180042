@@ -3,6 +3,7 @@ from pico2d import *
 
 import camera
 import config
+import day
 import game_framework
 import game_world
 from box import Box
@@ -41,12 +42,14 @@ def reset():
     hud.reset_lives()
     box.reset()
     camera.reset()
+    day.reset()
 
 
 def init():
     global hud, zone, box, level, show_collision_boxes
     show_collision_boxes = False
     zone = 'chase'
+    day.reset()
     hud = Hud()
     game_world.add_object(Background(), game_world.LAYER_BG)
     game_world.add_object(hud, game_world.LAYER_UI)
@@ -68,6 +71,7 @@ def update():
     game_world.update()
     game_world.handle_collisions()
     camera.follow(box.x)
+    day.update(box.x, level)
 
 
 def draw():
