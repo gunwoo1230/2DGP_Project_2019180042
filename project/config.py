@@ -74,7 +74,7 @@ DUMMY_HIT_TIME, DUMMY_SHAKE = 0.15, 4   # 초, px
 DUMMY_FONT_SIZE, DUMMY_TEXT_GAP = 32, 24    # 맞은 횟수 글자 크기, 머리 위 간격
 
 # 그림일기 화면
-UI_LIFE_X, UI_LIFE_GAP, UI_LIFE_Y = 60, 56, 772         # 생명 칸
+UI_LIFE_X, UI_LIFE_GAP, UI_LIFE_Y = 688, 56, 160       # 생명 칸 (바닥 띠 가운데, 5칸 가운데 x 800)
 UI_LIFE_EMPTY_ALPHA = 0.25              # 빈 생명 칸 불투명도
 UI_HEADER_Y, UI_NOW_X = 856, 868                        # 위쪽 칸 글자 높이, 지금 칸 가운데
 UI_DAY_X, UI_HOUR_X, UI_MIN_X = 1218, 1328, 1474        # 도망친 지 칸 숫자 가운데
