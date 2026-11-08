@@ -1,6 +1,7 @@
 # 그림일기 화면: 배경(맨 아래), 해, 지금·도망친 지, 원고지 팁, 테이프 생명 칸(맨 위)
 from pico2d import load_image
 
+import camera
 import config
 import day
 import font_data
@@ -55,16 +56,29 @@ class Sun:
 class GuardMarker:
     # 화면 왼쪽 밖 경비원 표시: 가까울수록 크게, 아주 가까우면 깜빡임 (모자 그림 대신 임시 네모)
     def __init__(self, guard):
-        pass
+        self.image = load_image('resource/placeholder/ph_guard.png')
+        self.guard = guard
 
     def update(self):
         pass
 
     def offscreen(self):
-        pass
+        # 경비원 오른쪽 끝이 플레이 칸 왼쪽 끝보다 얼마나 밖에 있는지 (0 이하면 화면 안)
+        return config.PLAY_LEFT - camera.to_screen(self.guard.x + config.GUARD_W / 2)
+
+    def scale(self, off):
+        # 막 들어오기 직전 1배, MARKER_FAR 이상 떨어지면 MARKER_MIN_SCALE배
+        t = min(off / config.MARKER_FAR, 1)
+        return 1 - (1 - config.MARKER_MIN_SCALE) * t
 
     def draw(self):
-        pass
+        if not self.guard.enabled or day.phase in ('boss', 'day_end'):
+            return
+        off = self.offscreen()
+        if off <= 0:
+            return
+        size = config.MARKER_SIZE * self.scale(off)
+        self.image.draw(config.MARKER_X, config.MARKER_Y, size, size)
 
     def get_bb(self):
         pass
