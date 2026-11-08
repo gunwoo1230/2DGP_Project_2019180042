@@ -26,6 +26,7 @@ PLATFORM_THICK = {'roof': 20, 'ledge': 12, 'peg': 10, 'accel': 20}  # 임시 그
 # 박스 이동
 BOX_START_X = 200                       # 시작 위치
 WALK_SPEED = 310                        # px/s
+FLOOR_SPEEDS = (310, 330, 350)          # 도로·창틀·지붕 기본 속도 px/s (FLOOR_YS와 같은 순서)
 ACCEL_RATE = 1.5                        # 가속 지붕 오른쪽 이동 배율
 HOP_HEIGHT = 10                         # 걷기 깡충 높이(그림만)
 CHARGE_MAX_TIME = 0.6                   # 초

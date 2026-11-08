@@ -541,17 +541,21 @@ class Box:
         # 차지 비율 c (0~1)
         return min(self.charge_time / config.CHARGE_MAX_TIME, 1)
 
+    def floor_speed(self):
+        # 서 있는 층의 기본 속도 (위층일수록 빠름)
+        return config.FLOOR_SPEEDS[floor_of(self.y)]
+
     def walk_speed(self):
-        # 가속 지붕 위에서 오른쪽으로 갈 때만 빠름
+        # 가속 지붕 위에서 오른쪽으로 갈 때만 더 빠름
         if self.on_accel_ground and self.dir > 0:
-            return config.WALK_SPEED * config.ACCEL_RATE
-        return config.WALK_SPEED
+            return self.floor_speed() * config.ACCEL_RATE
+        return self.floor_speed()
 
     def charge_speed(self):
         # 차지 중 이동 속도 (가속 지형 위에서는 감속 없음)
         if self.on_accel_ground:
             return self.walk_speed()
-        return config.WALK_SPEED * config.CHARGE_SPEED_RATE
+        return self.floor_speed() * config.CHARGE_SPEED_RATE
 
     def clamp_x(self):
         # 맵 양쪽 끝에 보이지 않는 벽
