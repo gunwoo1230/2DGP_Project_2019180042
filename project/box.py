@@ -117,6 +117,7 @@ class Charge:
     @staticmethod
     def enter(box, event):
         box.charge_time = 0.0
+        box.space_waiting = False   # 누른 Space를 처리함
 
     @staticmethod
     def exit(box, event):
@@ -260,6 +261,7 @@ class Get:
     def enter(box, event):
         box.get_time = 0.0
         box.vx = 0.0
+        box.shift_buffer = 0.0
         tape = box.near_tape
         game_world.remove_object(tape)
         box.near_tape = None
@@ -287,6 +289,7 @@ class Slam:
     def enter(box, event):
         box.slam_time = 0.0
         box.vx = 0.0
+        box.shift_buffer = 0.0
         box.slam_start_x = box.x
         box.slam_dir = box.face_dir
         box.slam_returning = False  # 돌아오는 중에는 맞지 않아서 돌진 한 번에 1회만 맞음
@@ -357,6 +360,7 @@ class Box:
         self.near_tape = None   # 지금 겹쳐 있는 테이프
         self.slam_cooldown = 0.0
         self.on_accel_ground = False    # 가속 지붕 위 여부
+        self.clear_input()
         self.state_machine = StateMachine(self, Idle, {
             Idle: [(is_air, Jump), (space_down, Charge), (can_pick_tape, Get), (can_slam, Slam), (is_moving, Walk)],
             Walk: [(is_air, Jump), (space_down, Charge), (can_pick_tape, Get), (can_slam, Slam), (is_stopped, Idle)],
@@ -377,7 +381,15 @@ class Box:
         self.face_dir = self.dir if self.dir != 0 else 1
         self.near_tape = None
         self.slam_cooldown = 0.0
+        self.clear_input()
         self.state_machine.reset(Walk if self.dir != 0 else Idle)
+
+    def clear_input(self):
+        # 미리 누른 키 기억 (Space는 누르고 있는지와 방금 눌렀는지를 따로)
+        self.space_waiting = False  # 눌렀는데 아직 처리 안 됨
+        self.space_held = False     # 지금 누르고 있음
+        self.space_buffer = 0.0     # 누른 뒤 남은 기억 시간
+        self.shift_buffer = 0.0
 
     def warp(self, x):
         # 디버그: 그 x의 도로 위로 옮김
@@ -398,6 +410,8 @@ class Box:
         self.state_machine.update()
         if self.state_machine.cur in GROUND_STATES:
             self.check_ground()
+        self.space_buffer = max(self.space_buffer - game_framework.frame_time, 0)
+        self.shift_buffer = max(self.shift_buffer - game_framework.frame_time, 0)
 
     def move_in_air(self):
         # Jump·Fall 공통 공중 이동, 착지했으면 True
@@ -445,7 +459,19 @@ class Box:
             return
         if event.key in (SDLK_LEFT, SDLK_RIGHT):
             self.update_dir(event)
+        self.remember_input(event)
         self.state_machine.handle_event(('KEY', event))
+
+    def remember_input(self, event):
+        # 상태 머신이 받기 전에 기록 (바로 처리되면 Charge·Get·Slam 진입에서 지움)
+        pressed = event.type == SDL_KEYDOWN
+        if event.key == SDLK_SPACE:
+            self.space_held = pressed
+            if pressed:
+                self.space_waiting = True
+                self.space_buffer = config.INPUT_BUFFER_TIME
+        elif event.key in (SDLK_LSHIFT, SDLK_RSHIFT) and pressed:
+            self.shift_buffer = config.INPUT_BUFFER_TIME
 
     def charge_ratio(self):
         # 차지 비율 c (0~1)
