@@ -409,7 +409,8 @@ class Box:
                    (is_stopped, Idle)],
             Slam: [(done_moving, Walk), (done_stopped, Idle)],
             Charge: [(is_air, Jump), (space_up, Jump), (space_tapped, Jump)],
-            Jump: [(is_fall, Fall), (done_moving, Walk), (done_stopped, Idle)],
+            # 한 프레임에 시작 층 아래로 내려가며 바로 착지해도 기절은 착지 높이로 판단
+            Jump: [(is_fall, Fall), (stunned, Recover), (done_moving, Walk), (done_stopped, Idle)],
             Fall: [(stunned, Recover), (done_moving, Walk), (done_stopped, Idle)],
             Recover: [(done_moving, Walk), (done_stopped, Idle)],
             Get: [(done_moving, Walk), (done_stopped, Idle)],
