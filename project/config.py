@@ -54,6 +54,12 @@ FX_RISE_TIME, FX_SPARKLE_TIME, FX_FLY_TIME = 0.25, 0.25, 0.35   # 초
 FX_RISE_H, FX_SPARKLE_FPS = 60, 8       # 머리 위 높이(px), 반짝임 속도
 FX_END_SCALE = 0.37                     # 생명 칸에 도착할 때 배율
 
+# 경비원 (임시 사각형)
+GUARD_W, GUARD_H = 90, 170              # 그림 크기
+GUARD_START_GAP = 600                   # 시작할 때 박스와의 거리
+GUARD_START_DELAY = 1                   # 출발 전 기다리는 시간 (초)
+GUARD_SPEED = 280                       # px/s
+
 # 몸통박치기
 SLAM_DIST, SLAM_TIME, SLAM_COOLDOWN = 130, 0.22, 0.5    # px, 초, 초
 SLAM_RETURN_TIME, SLAM_BOUNCE_H = 0.25, 16              # 돌아오는 시간(초), 튕김 높이(px, 그림만)
