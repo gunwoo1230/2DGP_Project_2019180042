@@ -8,6 +8,7 @@ import game_framework
 import game_world
 from box import Box
 from dummy import Dummy
+from guard import Guard
 from hud import Background, Hud, Sun
 from level import Level
 from map_data import DAY_MAP
@@ -44,6 +45,8 @@ def reset():
     game_world.remove_layer(game_world.LAYER_ITEM)
     game_world.remove_layer(game_world.LAYER_FX)
     spawn_items()
+    guard.reset()
+    game_world.add_object(guard, game_world.LAYER_ITEM)
     hud.reset_lives()
     box.reset()
     camera.reset()
@@ -52,7 +55,7 @@ def reset():
 
 
 def init():
-    global hud, box, level, show_collision_boxes
+    global hud, box, level, guard, show_collision_boxes
     show_collision_boxes = False
     day.reset()
     hud = Hud()
@@ -66,6 +69,9 @@ def init():
     game_world.add_collision_pair('box:tape', box, None)
     game_world.add_collision_pair('box:dummy', box, None)
     spawn_items()
+    # 경비원은 한 번 만들고 리셋 때 처음 위치로 (거리 게이지가 계속 참조)
+    guard = Guard()
+    game_world.add_object(guard, game_world.LAYER_ITEM)
     camera.init(level.right)
 
 
