@@ -354,6 +354,24 @@ class Slam:
                      sx=config.SLAM_SX, sy=config.SLAM_SY, rot=-box.slam_dir * config.SLAM_ROT)
 
 
+class Caught:
+    @staticmethod
+    def enter(box, event):
+        pass
+
+    @staticmethod
+    def exit(box, event):
+        pass
+
+    @staticmethod
+    def do(box):
+        pass
+
+    @staticmethod
+    def draw(box):
+        pass
+
+
 GROUND_STATES = (Idle, Walk, Charge, Get)   # 발밑 검사를 하는 상태 (Slam은 돌아온 뒤 검사)
 
 
@@ -414,6 +432,9 @@ class Box:
         self.vx, self.vy = 0.0, 0.0
         self.on_accel_ground = False
         self.state_machine.reset(Walk if self.dir != 0 else Idle)
+
+    def catch(self):
+        pass
 
     def drop_to(self, y):
         # 디버그: 그 높이 + 1px에서 공중으로 시작

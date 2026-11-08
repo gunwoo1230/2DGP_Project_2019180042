@@ -40,7 +40,7 @@ def spawn_items():
     game_world.add_collision_pair('box:dummy', None, dummy)
 
 
-def reset():
+def restart():
     # 박스 위치·생명·테이프 3개·허수아비 횟수·점수를 처음으로, 구간은 추격
     game_world.remove_layer(game_world.LAYER_ITEM)
     game_world.remove_layer(game_world.LAYER_FX)
@@ -107,7 +107,7 @@ def handle_events():
         elif event.type == SDL_KEYDOWN and event.key == SDLK_F1:
             show_collision_boxes = not show_collision_boxes
         elif event.type == SDL_KEYDOWN and event.key == SDLK_r:
-            reset()
+            restart()
         elif event.type == SDL_KEYDOWN and event.key == SDLK_n:
             next_left = level.next_tile_left(box.x)
             if next_left is not None:
