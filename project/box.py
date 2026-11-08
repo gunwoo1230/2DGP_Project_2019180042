@@ -42,8 +42,9 @@ def is_fall(box, event):
     return event[0] == 'FALL'
 
 
-def is_done(box, event):
-    return event[0] == 'DONE'
+def stunned(box, event):
+    # 시작 층보다 한 층 아래의 최소 높이 이하에 착지해야 기절 (도로 층에서 출발하면 없음)
+    return event[0] == 'DONE' and box.floor > 0 and box.y <= config.FLOOR_YS[box.floor - 1] + 1
 
 
 def space_down(box, event):
@@ -409,7 +410,7 @@ class Box:
             Slam: [(done_moving, Walk), (done_stopped, Idle)],
             Charge: [(is_air, Jump), (space_up, Jump), (space_tapped, Jump)],
             Jump: [(is_fall, Fall), (done_moving, Walk), (done_stopped, Idle)],
-            Fall: [(is_done, Recover)],
+            Fall: [(stunned, Recover), (done_moving, Walk), (done_stopped, Idle)],
             Recover: [(done_moving, Walk), (done_stopped, Idle)],
             Get: [(done_moving, Walk), (done_stopped, Idle)],
         })
