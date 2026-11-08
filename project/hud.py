@@ -57,6 +57,7 @@ class GuardMarker:
     # 화면 왼쪽 밖 경비원 표시: 가까울수록 크게, 아주 가까우면 깜빡임 (모자 그림 대신 임시 네모)
     def __init__(self, guard):
         self.image = load_image('resource/placeholder/ph_guard.png')
+        self.font = load_image('resource/font_sheet.png')
         self.guard = guard
 
     def update(self):
@@ -79,6 +80,11 @@ class GuardMarker:
             return
         size = config.MARKER_SIZE * self.scale(off)
         self.image.draw(config.MARKER_X, config.MARKER_Y, size, size)
+        # 네모 왼쪽에 붙는 ← (크기는 그대로)
+        l, b, w, h = font_data.CELL_RECT['←']
+        s = config.MARKER_ARROW_SCALE
+        arrow_x = config.MARKER_X - size / 2 - config.MARKER_ARROW_GAP - w * s / 2
+        self.font.clip_draw(l, b, w, h, arrow_x, config.MARKER_Y, w * s, h * s)
 
     def get_bb(self):
         pass
