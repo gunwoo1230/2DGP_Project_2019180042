@@ -100,6 +100,12 @@ def update_chase():
             restart()
 
 
+def warp(x):
+    # 디버그: 그 x의 도로로 옮기고, 건너뛴 칸도 점수에 넣고 해도 바로 맞춤
+    box.warp(x)
+    day.snap(box.x, level)
+
+
 def draw():
     clear_canvas()
     game_world.draw()
@@ -127,8 +133,9 @@ def handle_events():
         elif event.type == SDL_KEYDOWN and event.key == SDLK_n:
             next_left = level.next_tile_left(box.x)
             if next_left is not None:
-                box.warp(next_left)
-                day.snap(box.x, level)
+                warp(next_left)
+        elif event.type == SDL_KEYDOWN and event.key == SDLK_e:
+            warp(level.tiles[-2][1])    # 마지막 칸 앞 (낮 끝 시험용)
         elif event.type == SDL_KEYDOWN and event.key in DROP_KEYS:
             box.drop_to(DROP_KEYS[event.key])
         else:
