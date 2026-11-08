@@ -1,4 +1,4 @@
-# 카메라: 오른쪽으로만 따라감, 월드 좌표 -> 화면 좌표
+# 카메라: 박스가 화면 x 400 ~ 640 밖으로 나가면 양쪽으로 따라감, 월드 좌표 -> 화면 좌표
 import config
 
 x = 0.0
@@ -17,9 +17,14 @@ def reset():
 
 
 def follow(box_x):
-    # 뒤로는 돌아가지 않음
+    # 박스가 따라가기 구간 안에 있으면 그대로
     global x
-    x = min(max(x, box_x - config.CAMERA_FOLLOW_X), max_x)
+    screen_x = box_x - x
+    if screen_x > config.CAMERA_FOLLOW_X:
+        x = box_x - config.CAMERA_FOLLOW_X
+    elif screen_x < config.CAMERA_BACK_X:
+        x = box_x - config.CAMERA_BACK_X
+    x = min(max(x, 0.0), max_x)
 
 
 def to_screen(world_x):

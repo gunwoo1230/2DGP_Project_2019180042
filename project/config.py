@@ -10,7 +10,8 @@ SPRITE_SCALE = 0.6                      # 스프라이트 그리기 배율
 # 맵·카메라
 TILE_W = 600                            # 타일 폭
 MAP_LEFT = 20                           # 첫 타일 왼쪽 끝 월드 x
-CAMERA_FOLLOW_X = 640                   # 박스가 이 화면 x를 넘으면 카메라가 따라감
+CAMERA_FOLLOW_X = 640                   # 박스가 이 화면 x보다 오른쪽이면 카메라가 오른쪽으로
+CAMERA_BACK_X = 400                     # 박스가 이 화면 x보다 왼쪽이면 카메라가 왼쪽으로
 DRAW_MARGIN = 100                       # 화면 밖 이만큼까지는 그림
 FOOT_HALF = 20                          # 발 폭의 절반 (발판 위에 서 있는지 판정)
 SNAP = 8                                # 발밑 발판에 붙는 허용 오차(px)
