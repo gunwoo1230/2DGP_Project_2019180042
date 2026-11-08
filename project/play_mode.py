@@ -9,7 +9,7 @@ import game_world
 from box import Box
 from dummy import Dummy
 from guard import Guard
-from hud import Background, Hud, Sun
+from hud import Background, Gauge, Hud, Sun
 from level import Level
 from map_data import DAY_MAP
 from tape import TapeItem
@@ -72,6 +72,7 @@ def init():
     # 경비원은 한 번 만들고 리셋 때 처음 위치로 (거리 게이지가 계속 참조)
     guard = Guard()
     game_world.add_object(guard, game_world.LAYER_ITEM)
+    game_world.add_object(Gauge(box, guard), game_world.LAYER_UI)
     camera.init(level.right)
 
 

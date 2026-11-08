@@ -55,6 +55,39 @@ class Sun:
         pass
 
 
+class Gauge:
+    # 경비원과의 거리 (임시 막대): 꽉 차면 안전, 비면 잡힘
+    def __init__(self, box, guard):
+        self.bg = load_image('resource/placeholder/ph_gauge_bg.png')
+        self.fill = load_image('resource/placeholder/ph_gauge.png')
+        self.box = box
+        self.guard = guard
+
+    def update(self):
+        pass
+
+    def ratio(self):
+        dist = self.box.x - self.guard.x
+        r = (dist - config.CATCH_DIST) / (config.GUARD_START_GAP - config.CATCH_DIST)
+        return min(max(r, 0), 1)
+
+    def draw(self):
+        if not self.guard.enabled or day.phase == 'boss':
+            return
+        w, h = config.GAUGE_W, config.GAUGE_H
+        self.bg.draw(config.GAUGE_X, config.GAUGE_Y, w, h)
+        fill_w = w * self.ratio()
+        if fill_w > 0:
+            # 왼쪽 끝에 맞춰 채움
+            self.fill.draw(config.GAUGE_X - w / 2 + fill_w / 2, config.GAUGE_Y, fill_w, h)
+
+    def get_bb(self):
+        pass
+
+    def handle_collision(self, group, other):
+        pass
+
+
 class Hud:
     def __init__(self):
         self.frame = load_image('resource/diary_frame.png')
