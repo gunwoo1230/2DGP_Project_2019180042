@@ -1,4 +1,6 @@
-# 그림일기 화면: 배경(맨 아래)과 지금·도망친 지, 원고지 팁, 테이프 생명 칸(맨 위)
+# 그림일기 화면: 배경(맨 아래), 해, 지금·도망친 지, 원고지 팁, 테이프 생명 칸(맨 위)
+import math
+
 from pico2d import load_image
 
 import config
@@ -22,6 +24,29 @@ class Background:
 
     def draw(self):
         self.image.draw(config.SCREEN_W / 2, config.SCREEN_H / 2)
+
+    def get_bb(self):
+        pass
+
+    def handle_collision(self, group, other):
+        pass
+
+
+class Sun:
+    # 하늘의 해: 진행률에 따라 타원 길을 따라 왼쪽 아래 -> 위 -> 오른쪽 아래 (화면 좌표)
+    def __init__(self):
+        self.image = load_image('resource/placeholder/ph_sun.png')
+
+    def update(self):
+        pass
+
+    def draw(self):
+        if day.phase == 'boss':
+            return
+        a = math.pi * day.sun_p
+        x = config.SUN_CENTER_X - config.SUN_RX * math.cos(a)
+        y = config.SUN_CENTER_Y + config.SUN_RY * math.sin(a)
+        self.image.draw(x, y)
 
     def get_bb(self):
         pass

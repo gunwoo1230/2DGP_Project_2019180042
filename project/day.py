@@ -17,9 +17,15 @@ def reset():
 
 def update(box_x, level):
     # 추격 중에만 점수가 오름, 뒤로 가거나 떨어져도 줄지 않음
-    global best_tile
+    global best_tile, sun_p
     if phase == 'chase':
         best_tile = max(best_tile, level.tile_index(box_x))
+    sun_p = progress(level)
+
+
+def progress(level):
+    # 진행률 = 최고 도달 타일 / 마지막 칸 번호 (0 ~ 1)
+    return min(best_tile / (len(level.tiles) - 1), 1)
 
 
 def minutes():

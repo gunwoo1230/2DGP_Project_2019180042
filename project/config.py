@@ -17,6 +17,8 @@ FOOT_HALF = 20                          # 발 폭의 절반 (발판 위에 서 �
 SNAP = 8                                # 발밑 발판에 붙는 허용 오차(px)
 FLOOR_YS = (ROAD_Y, LEDGE_Y, ROOF_Y)    # 층 최소 높이
 MINUTES_PER_TILE = 10                   # 건물 1칸 = 10분
+SUN_CENTER_X, SUN_CENTER_Y = 800, 640   # 해 타원 중심 (화면 좌표)
+SUN_RX, SUN_RY = 720, 140               # 해 타원 반지름
 PLATFORM_THICK = {'roof': 20, 'ledge': 12, 'peg': 10, 'accel': 20}  # 임시 그림 두께
 
 # 박스 이동
