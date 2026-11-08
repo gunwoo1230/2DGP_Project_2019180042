@@ -52,6 +52,27 @@ class Sun:
         pass
 
 
+class GuardMarker:
+    # 화면 왼쪽 밖 경비원 표시: 가까울수록 크게, 아주 가까우면 깜빡임 (모자 그림 대신 임시 네모)
+    def __init__(self, guard):
+        pass
+
+    def update(self):
+        pass
+
+    def offscreen(self):
+        pass
+
+    def draw(self):
+        pass
+
+    def get_bb(self):
+        pass
+
+    def handle_collision(self, group, other):
+        pass
+
+
 class Hud:
     def __init__(self):
         self.frame = load_image('resource/diary_frame.png')

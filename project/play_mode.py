@@ -9,7 +9,7 @@ import game_world
 from box import Box
 from dummy import Dummy
 from guard import Guard
-from hud import Background, Hud, Sun
+from hud import Background, GuardMarker, Hud, Sun
 from level import Level
 from map_data import BOSS_ARENA, DAY_MAP, TEST_MAP
 from tape import TapeItem
@@ -97,6 +97,7 @@ def init():
     # 경비원은 한 번 만들고 리셋 때 처음 위치로
     guard = Guard()
     game_world.add_object(guard, game_world.LAYER_ITEM)
+    game_world.add_object(GuardMarker(guard), game_world.LAYER_UI)    # Hud 다음: 테두리 덮개 위에 그림
     camera.init(level.right)
 
 
