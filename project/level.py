@@ -9,6 +9,11 @@ from tiles import TILES, Platform, draw_tile, load_images
 class Level:
     def __init__(self, tile_names):
         load_images()
+        self.load(tile_names)
+
+    def load(self, tile_names):
+        # 레벨 교체 (박스가 이 객체를 들고 있으므로 내용만 바꿈)
+        self.names = tile_names
         # (타일 이름, 왼쪽 끝 월드 x)
         self.tiles = [(name, config.MAP_LEFT + config.TILE_W * i) for i, name in enumerate(tile_names)]
         self.right = config.MAP_LEFT + config.TILE_W * len(tile_names)

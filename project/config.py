@@ -20,6 +20,7 @@ MINUTES_PER_TILE = 10                   # 건물 1칸 = 10분
 SUN_CENTER_X, SUN_CENTER_Y = 800, 640   # 해 타원 중심 (화면 좌표)
 SUN_RX, SUN_RY = 720, 140               # 해 타원 반지름
 SUN_SPEED = 0.05                        # 그리는 해의 진행률이 따라가는 속도 (초당)
+DAY_END_TIME = 2                        # 낮 끝에 경비원 지침을 보여 주는 시간 (초)
 PLATFORM_THICK = {'roof': 20, 'ledge': 12, 'peg': 10, 'accel': 20}  # 임시 그림 두께
 
 # 박스 이동

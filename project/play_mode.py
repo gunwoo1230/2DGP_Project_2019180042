@@ -11,7 +11,7 @@ from dummy import Dummy
 from guard import Guard
 from hud import Background, Gauge, Hud, Sun
 from level import Level
-from map_data import DAY_MAP
+from map_data import BOSS_ARENA, DAY_MAP
 from tape import TapeItem
 
 # 디버그: 지금 x에서 이 높이로 옮겨 떨어뜨림
@@ -26,32 +26,56 @@ def apply_zone():
 
 
 def toggle_zone():
+    # 디버그 구간 전환 (레벨은 그대로), 낮 끝 중에는 무시
+    if day.phase == 'day_end':
+        return
+    if day.phase == 'boss' and level.names == BOSS_ARENA:
+        restart()   # 보스 무대에는 추격할 맵이 없으므로 낮 맵 처음부터
+        return
     day.phase = 'chase' if day.phase == 'boss' else 'boss'
     apply_zone()
 
 
-def spawn_items():
+def spawn_tapes():
     for x in config.TAPE_XS:
         tape = TapeItem(x)
         game_world.add_object(tape, game_world.LAYER_ITEM)
         game_world.add_collision_pair('box:tape', None, tape)
+
+
+def spawn_dummy():
     dummy = Dummy()
     game_world.add_object(dummy, game_world.LAYER_ITEM)
     game_world.add_collision_pair('box:dummy', None, dummy)
 
 
 def restart():
-    # 박스 위치·생명·테이프 3개·허수아비 횟수·점수를 처음으로, 구간은 추격
+    # 낮 맵 처음부터: 박스·경비원·생명·테이프 3개·허수아비·점수·해, 구간은 추격
     game_world.remove_layer(game_world.LAYER_ITEM)
     game_world.remove_layer(game_world.LAYER_FX)
-    spawn_items()
+    if level.names != DAY_MAP:
+        level.load(DAY_MAP)
+    camera.init(level.right)
+    spawn_tapes()
+    spawn_dummy()
     guard.reset()
     game_world.add_object(guard, game_world.LAYER_ITEM)
     hud.reset_lives()
     box.reset()
-    camera.reset()
     day.reset()
     apply_zone()
+
+
+def to_boss():
+    # 낮 끝 -> 보스 구간 (임시 빈터 무대), 생명은 그대로 이어짐
+    # 날아가는 중인 테이프 연출은 생명 칸에 들어가야 하므로 FX 레이어는 지우지 않음
+    day.phase = 'boss'
+    apply_zone()
+    level.load(BOSS_ARENA)
+    camera.init(level.right)
+    game_world.remove_layer(game_world.LAYER_ITEM)     # 바닥 테이프·경비원
+    spawn_dummy()
+    box.reset()
 
 
 def init():
@@ -68,7 +92,8 @@ def init():
     game_world.add_object(box, game_world.LAYER_BOX)
     game_world.add_collision_pair('box:tape', box, None)
     game_world.add_collision_pair('box:dummy', box, None)
-    spawn_items()
+    spawn_tapes()
+    spawn_dummy()
     # 경비원은 한 번 만들고 리셋 때 처음 위치로 (거리 게이지가 계속 참조)
     guard = Guard()
     game_world.add_object(guard, game_world.LAYER_ITEM)
@@ -90,6 +115,7 @@ def update():
 
 def update_chase():
     # 가로 거리만 보고 잡힘 (지붕 위에서도), 잡히면 잠깐 멈춘 뒤 처음부터
+    # 낮 끝에는 경비원이 지친 모습을 잠깐 보여 준 뒤 보스 구간으로
     if day.phase == 'chase' and guard.enabled and box.x - guard.x <= config.CATCH_DIST:
         day.phase = 'caught'
         day.timer = 0.0
@@ -98,6 +124,10 @@ def update_chase():
         day.timer += game_framework.frame_time
         if day.timer >= config.CAUGHT_TIME:
             restart()
+    elif day.phase == 'day_end':
+        day.timer += game_framework.frame_time
+        if day.timer >= config.DAY_END_TIME:
+            to_boss()
 
 
 def warp(x):
