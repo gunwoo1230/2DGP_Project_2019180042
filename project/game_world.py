@@ -4,9 +4,9 @@ from pico2d import draw_rectangle
 import camera
 
 # 그리기 레이어 (아래부터)
-LAYER_BG, LAYER_MAP, LAYER_ITEM, LAYER_BOX, LAYER_FX, LAYER_UI = range(6)
+LAYER_BG, LAYER_SKY, LAYER_MAP, LAYER_ITEM, LAYER_BOX, LAYER_FX, LAYER_UI = range(7)
 
-objects = [[] for _ in range(6)]
+objects = [[] for _ in range(7)]
 collision_pairs = {}    # 그룹 이름: (a 목록, b 목록)
 
 
