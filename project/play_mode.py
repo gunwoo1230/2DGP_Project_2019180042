@@ -84,6 +84,19 @@ def update():
     game_world.handle_collisions()
     camera.follow(box.x)
     day.update(box.x, level)
+    update_chase()
+
+
+def update_chase():
+    # 가로 거리만 보고 잡힘 (지붕 위에서도), 잡히면 잠깐 멈춘 뒤 처음부터
+    if day.phase == 'chase' and guard.enabled and box.x - guard.x <= config.CATCH_DIST:
+        day.phase = 'caught'
+        day.timer = 0.0
+        box.catch()
+    elif day.phase == 'caught':
+        day.timer += game_framework.frame_time
+        if day.timer >= config.CAUGHT_TIME:
+            restart()
 
 
 def draw():
@@ -102,12 +115,14 @@ def handle_events():
             game_framework.quit()
         elif event.type == SDL_KEYDOWN and event.key == SDLK_ESCAPE:
             game_framework.quit()
-        elif event.type == SDL_KEYDOWN and event.key == SDLK_b:
-            toggle_zone()
         elif event.type == SDL_KEYDOWN and event.key == SDLK_F1:
             show_collision_boxes = not show_collision_boxes
         elif event.type == SDL_KEYDOWN and event.key == SDLK_r:
             restart()
+        elif event.type == SDL_KEYDOWN and day.phase == 'caught':
+            box.handle_event(event)     # 잡힘 중에는 나머지 디버그 키를 받지 않음
+        elif event.type == SDL_KEYDOWN and event.key == SDLK_b:
+            toggle_zone()
         elif event.type == SDL_KEYDOWN and event.key == SDLK_n:
             next_left = level.next_tile_left(box.x)
             if next_left is not None:

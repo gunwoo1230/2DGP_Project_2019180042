@@ -59,6 +59,8 @@ GUARD_W, GUARD_H = 90, 170              # 그림 크기
 GUARD_START_GAP = 600                   # 시작할 때 박스와의 거리
 GUARD_START_DELAY = 1                   # 출발 전 기다리는 시간 (초)
 GUARD_SPEED = 280                       # px/s
+CATCH_DIST = 90                         # 박스와의 가로 거리가 이 이하면 잡힘
+CAUGHT_TIME = 1                         # 잡힌 뒤 멈춤 시간 (초)
 
 # 몸통박치기
 SLAM_DIST, SLAM_TIME, SLAM_COOLDOWN = 130, 0.22, 0.5    # px, 초, 초

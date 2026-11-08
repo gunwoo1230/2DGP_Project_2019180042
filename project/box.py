@@ -355,9 +355,10 @@ class Slam:
 
 
 class Caught:
+    # 경비원에게 잡힘: 그 자리에 멈춤, 규칙이 없어 입력을 받지 않음
     @staticmethod
     def enter(box, event):
-        pass
+        box.vx, box.vy = 0.0, 0.0
 
     @staticmethod
     def exit(box, event):
@@ -369,7 +370,7 @@ class Caught:
 
     @staticmethod
     def draw(box):
-        pass
+        draw_box(box.sheet, 'hit', 0, camera.to_screen(box.x), box.y, flip=box.face_dir < 0)
 
 
 GROUND_STATES = (Idle, Walk, Charge, Get)   # 발밑 검사를 하는 상태 (Slam은 돌아온 뒤 검사)
@@ -434,7 +435,8 @@ class Box:
         self.state_machine.reset(Walk if self.dir != 0 else Idle)
 
     def catch(self):
-        pass
+        # 어느 상태에서든 바로 잡힘 (회복 중 도는 별은 스스로 지워짐)
+        self.state_machine.reset(Caught)
 
     def drop_to(self, y):
         # 디버그: 그 높이 + 1px에서 공중으로 시작
