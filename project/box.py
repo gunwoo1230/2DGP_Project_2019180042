@@ -523,9 +523,9 @@ class Box:
         return config.WALK_SPEED * config.CHARGE_SPEED_RATE
 
     def clamp_x(self):
-        # 왼쪽은 화면 끝에 막혀 되돌아갈 수 없고, 오른쪽은 맵 끝에 보이지 않는 벽
+        # 맵 양쪽 끝에 보이지 않는 벽
         half = config.BOX_BB_W / 2
-        self.x = max(camera.x + config.PLAY_LEFT + half, min(self.x, self.level.right - half))
+        self.x = max(config.MAP_LEFT + half, min(self.x, self.level.right - half))
 
     def update_dir(self, event):
         # 왼쪽·오른쪽 눌림 기록
