@@ -106,6 +106,7 @@ def handle_events():
             next_left = level.next_tile_left(box.x)
             if next_left is not None:
                 box.warp(next_left)
+                day.snap(box.x, level)
         elif event.type == SDL_KEYDOWN and event.key in DROP_KEYS:
             box.drop_to(DROP_KEYS[event.key])
         else:
