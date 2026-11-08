@@ -49,6 +49,16 @@ def space_up(box, event):
     return event[0] == 'KEY' and event[1].type == SDL_KEYUP and event[1].key == SDLK_SPACE
 
 
+def space_ready(box, event):
+    # 미리 누른 Space가 남아 있음
+    return event[0] == 'BUFFER' and box.space_waiting
+
+
+def space_tapped(box, event):
+    # 미리 누른 Space를 이미 뗐음
+    return event[0] == 'BUFFER' and not box.space_held
+
+
 def shift_down(box, event):
     return event[0] == 'KEY' and event[1].type == SDL_KEYDOWN and event[1].key in (SDLK_LSHIFT, SDLK_RSHIFT)
 
@@ -141,7 +151,7 @@ class Charge:
 class Jump:
     @staticmethod
     def enter(box, event):
-        if event and event[0] == 'KEY':
+        if event and event[0] in ('KEY', 'BUFFER'):
             height = config.JUMP_MIN_H + (config.JUMP_MAX_H - config.JUMP_MIN_H) * box.charge_ratio()
             box.vy = math.sqrt(2 * config.GRAVITY * height)
             box.vx = box.dir * box.charge_speed()   # 시작 가로 속도 = 그때의 이동 속도
@@ -362,10 +372,12 @@ class Box:
         self.on_accel_ground = False    # 가속 지붕 위 여부
         self.clear_input()
         self.state_machine = StateMachine(self, Idle, {
-            Idle: [(is_air, Jump), (space_down, Charge), (can_pick_tape, Get), (can_slam, Slam), (is_moving, Walk)],
-            Walk: [(is_air, Jump), (space_down, Charge), (can_pick_tape, Get), (can_slam, Slam), (is_stopped, Idle)],
+            Idle: [(is_air, Jump), (space_down, Charge), (space_ready, Charge), (can_pick_tape, Get), (can_slam, Slam),
+                   (is_moving, Walk)],
+            Walk: [(is_air, Jump), (space_down, Charge), (space_ready, Charge), (can_pick_tape, Get), (can_slam, Slam),
+                   (is_stopped, Idle)],
             Slam: [(done_moving, Walk), (done_stopped, Idle)],
-            Charge: [(is_air, Jump), (space_up, Jump)],
+            Charge: [(is_air, Jump), (space_up, Jump), (space_tapped, Jump)],
             Jump: [(is_fall, Fall), (done_moving, Walk), (done_stopped, Idle)],
             Fall: [(is_done, Recover)],
             Recover: [(done_moving, Walk), (done_stopped, Idle)],
@@ -410,8 +422,21 @@ class Box:
         self.state_machine.update()
         if self.state_machine.cur in GROUND_STATES:
             self.check_ground()
+        self.use_buffer()
         self.space_buffer = max(self.space_buffer - game_framework.frame_time, 0)
         self.shift_buffer = max(self.shift_buffer - game_framework.frame_time, 0)
+
+    def use_buffer(self):
+        # 땅 위에서 움직일 수 있게 되면 미리 누른 키를 처리
+        if self.state_machine.cur not in (Idle, Walk):
+            return
+        if self.space_waiting and not self.space_held and self.space_buffer <= 0:
+            self.space_waiting = False  # 너무 일찍 눌렀다 뗀 것은 버림
+        if self.space_waiting:
+            self.state_machine.handle_event(('BUFFER', None))
+            # 이미 뗐으면 차지 0으로 바로 뜀
+            if self.state_machine.cur is Charge and not self.space_held:
+                self.state_machine.handle_event(('BUFFER', None))
 
     def move_in_air(self):
         # Jump·Fall 공통 공중 이동, 착지했으면 True
