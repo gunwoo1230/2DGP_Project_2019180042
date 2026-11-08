@@ -11,7 +11,7 @@ from dummy import Dummy
 from guard import Guard
 from hud import Background, Gauge, Hud, Sun
 from level import Level
-from map_data import BOSS_ARENA, DAY_MAP
+from map_data import BOSS_ARENA, DAY_MAP, TEST_MAP
 from tape import TapeItem
 
 # 디버그: 지금 x에서 이 높이로 옮겨 떨어뜨림
@@ -49,12 +49,12 @@ def spawn_dummy():
     game_world.add_collision_pair('box:dummy', None, dummy)
 
 
-def restart():
-    # 낮 맵 처음부터: 박스·경비원·생명·테이프 3개·허수아비·점수·해, 구간은 추격
+def restart(tile_names=DAY_MAP):
+    # 처음부터 (보통 낮 맵): 박스·경비원·생명·테이프 3개·허수아비·점수·해, 구간은 추격
     game_world.remove_layer(game_world.LAYER_ITEM)
     game_world.remove_layer(game_world.LAYER_FX)
-    if level.names != DAY_MAP:
-        level.load(DAY_MAP)
+    if level.names != tile_names:
+        level.load(tile_names)
     camera.init(level.right)
     spawn_tapes()
     spawn_dummy()
@@ -166,6 +166,10 @@ def handle_events():
                 warp(next_left)
         elif event.type == SDL_KEYDOWN and event.key == SDLK_e:
             warp(level.tiles[-2][1])    # 마지막 칸 앞 (낮 끝 시험용)
+        elif event.type == SDL_KEYDOWN and event.key == SDLK_g:
+            guard.enabled = not guard.enabled   # 끄면 멈추고 잡힘·게이지 없음 (맵 시험용)
+        elif event.type == SDL_KEYDOWN and event.key == SDLK_m:
+            restart(TEST_MAP if level.names == DAY_MAP else DAY_MAP)
         elif event.type == SDL_KEYDOWN and event.key in DROP_KEYS:
             box.drop_to(DROP_KEYS[event.key])
         else:
