@@ -1,8 +1,8 @@
 # 박스야, 도망쳐! — 2주차 PREPRD (11/11 ~ 11/17)
 
 > 이 문서는 Claude Code에 넘겨 2주차 구현을 진행하기 위한 **요구사항 문서**입니다.
-> Claude Code는 이 문서를 보고 1주차 `w1PRD.md`처럼 커밋 계획 `w2PRD.md`를 먼저 만들고 진행합니다.
-> 전체 진행은 `전체_PRD.md`, 게임 기획은 `구르박스_기획정리_v18.md`를 따릅니다. 공통 작업 규칙(뼈대 → 채움 커밋, `[week2]` 커밋 메시지, 수치는 config)은 전체 PRD 6장을 따릅니다.
+> Claude Code는 이 문서를 보고 1주차 `w1_1PRD.md`처럼 커밋 계획 `w1_2PRD.md`를 먼저 만들고 진행합니다.
+> 전체 진행은 `00_전체PRD.md`, 게임 기획은 `구르박스_기획정리_v18.md`를 따릅니다. 공통 작업 규칙(뼈대 → 채움 커밋, `[week2]` 커밋 메시지, 수치는 config)은 전체 PRD 6장을 따릅니다.
 
 ## 1. 배경
 - 1주차까지 된 것: 게임 루프·게임 월드·상태 머신·config, 그림일기 화면(지금·도망친 지·생명 칸·팁), 박스 조작 4가지(걷기 깡충, 차지 점프, 테이프 줍기, 몸통박치기), 디버그 키(F1·B·R)
@@ -34,7 +34,7 @@
 ## 3. 시작 전에 확인할 것
 1. `week1` 브랜치에서 `week2` 브랜치를 만든다.
 2. 함께 받은 `resource/placeholder/`의 새 임시 그림 6장을 저장소 루트 `resource/placeholder/`에 넣는다: `ph_wall`, `ph_roof`, `ph_ledge`, `ph_peg`, `ph_pipe`, `ph_accel`
-3. `planning/tile_guide.png`(타일 5종 그림), `planning/test_map_preview.png`(테스트 맵 전체 모습)를 함께 넣고 5장 좌표와 비교해 본다.
+3. `planning/preview/tile_guide.png`(타일 5종 그림), `planning/preview/test_map_preview.png`(테스트 맵 전체 모습)를 함께 넣고 5장 좌표와 비교해 본다.
 4. 실행은 1주차와 같이 **저장소 루트에서** `python project/main.py`
 5. 구현 중 기획과 다르게 해야 할 일이 생기면 임의로 바꾸지 말고 질문한다.
 
@@ -141,7 +141,7 @@ for tile in TILES.values():
 ```python
 TEST_MAP = ['start', 'basic', 'pipe', 'basic', 'accel', 'gap', 'pole', 'basic', 'accel', 'gap', 'basic']
 ```
-- 11칸 = 6600px. `planning/test_map_preview.png` 참고
+- 11칸 = 6600px. `planning/preview/test_map_preview.png` 참고
 - 맵은 **타일 이름 목록**이다. 레벨을 만들 때 각 타일의 발판·벽·장식을 `왼쪽 끝 x`만큼 옮겨 월드 좌표 목록으로 만든다.
 
 ### 5.5 임시 그림 (그리는 방법)
@@ -293,7 +293,7 @@ TEST_MAP = ['start', 'basic', 'pipe', 'basic', 'accel', 'gap', 'pole', 'basic', 
 - [ ] N, 1/2/3 디버그 키가 동작한다
 
 ## 9. 진행 방식
-- 공통 작업 규칙(전체 PRD 6장)을 따른다. 먼저 `planning/w2PRD.md`에 커밋 계획을 쓰고 진행한다.
+- 공통 작업 규칙(전체 PRD 6장)을 따른다. 먼저 `planning/PRD/w1_2PRD.md`에 커밋 계획을 쓰고 진행한다.
 - 추천 단계 (각 단계가 끝날 때마다 실행해서 확인 가능한 상태)
   1. 레이어 정리: HUD를 배경·UI로 나눔, 테두리 덮개
   2. 카메라·월드 좌표: 긴 도로(타일 `start`만 여러 개)에서 1주차 기능 확인
