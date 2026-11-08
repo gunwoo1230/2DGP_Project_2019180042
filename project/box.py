@@ -63,12 +63,17 @@ def shift_down(box, event):
     return event[0] == 'KEY' and event[1].type == SDL_KEYDOWN and event[1].key in (SDLK_LSHIFT, SDLK_RSHIFT)
 
 
+def shift_ready(box, event):
+    # 지금 누른 Shift 또는 미리 누른 Shift가 남아 있음
+    return shift_down(box, event) or (event[0] == 'BUFFER' and box.shift_buffer > 0)
+
+
 def can_pick_tape(box, event):
-    return shift_down(box, event) and box.zone == 'chase' and box.near_tape is not None and not box.hud.is_full()
+    return shift_ready(box, event) and box.zone == 'chase' and box.near_tape is not None and not box.hud.is_full()
 
 
 def can_slam(box, event):
-    return shift_down(box, event) and box.zone == 'boss' and box.slam_cooldown <= 0
+    return shift_ready(box, event) and box.zone == 'boss' and box.slam_cooldown <= 0
 
 
 class Idle:
@@ -417,7 +422,6 @@ class Box:
         self.state_machine.reset(Jump)
 
     def update(self):
-        self.near_tape = None   # 이번 프레임의 충돌 처리에서 다시 기록됨
         self.slam_cooldown = max(self.slam_cooldown - game_framework.frame_time, 0)
         self.state_machine.update()
         if self.state_machine.cur in GROUND_STATES:
@@ -425,6 +429,8 @@ class Box:
         self.use_buffer()
         self.space_buffer = max(self.space_buffer - game_framework.frame_time, 0)
         self.shift_buffer = max(self.shift_buffer - game_framework.frame_time, 0)
+        # 미리 누른 Shift를 처리할 때까지 직전 충돌 결과를 씀, 다음 충돌 처리에서 다시 기록됨
+        self.near_tape = None
 
     def use_buffer(self):
         # 땅 위에서 움직일 수 있게 되면 미리 누른 키를 처리
@@ -437,6 +443,8 @@ class Box:
             # 이미 뗐으면 차지 0으로 바로 뜀
             if self.state_machine.cur is Charge and not self.space_held:
                 self.state_machine.handle_event(('BUFFER', None))
+        elif self.shift_buffer > 0:
+            self.state_machine.handle_event(('BUFFER', None))
 
     def move_in_air(self):
         # Jump·Fall 공통 공중 이동, 착지했으면 True
