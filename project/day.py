@@ -36,9 +36,13 @@ def snap(box_x, level):
 
 def record(box_x, level):
     # 추격 중에만 점수가 오름, 뒤로 가거나 떨어져도 줄지 않음
-    global best_tile
+    # 마지막 칸에 들어가면 낮 끝 (해가 오른쪽에 닿음)
+    global best_tile, phase, timer
     if phase == 'chase':
         best_tile = max(best_tile, level.tile_index(box_x))
+        if best_tile == len(level.tiles) - 1:
+            phase = 'day_end'
+            timer = 0.0
 
 
 def progress(level):

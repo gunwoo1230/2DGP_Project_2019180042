@@ -32,7 +32,9 @@ class Guard:
     def draw(self):
         if day.phase == 'boss' or not camera.visible(self.x):
             return
-        self.image.draw(camera.to_screen(self.x), config.ROAD_Y + config.GUARD_H / 2, config.GUARD_W, config.GUARD_H)
+        # 낮 끝에는 지쳐 주저앉음 (임시: 높이 절반, 바닥에 붙임)
+        h = config.GUARD_H / 2 if day.phase == 'day_end' else config.GUARD_H
+        self.image.draw(camera.to_screen(self.x), config.ROAD_Y + h / 2, config.GUARD_W, h)
 
     def get_bb(self):
         pass
