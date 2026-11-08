@@ -2,6 +2,7 @@
 from pico2d import load_image
 
 import config
+import day
 import font_data
 import game_framework
 from sprite_data import draw_item
@@ -94,9 +95,10 @@ class Hud:
         font_data.draw_now(self.font, time_word, place_word, config.UI_NOW_X, config.UI_HEADER_Y)
 
     def draw_time(self):
-        # 아직 0일 0시간 0분 고정 (시계는 3주차)
-        for x in (config.UI_DAY_X, config.UI_HOUR_X, config.UI_MIN_X):
-            font_data.draw_number(self.font, 0, x, config.UI_HEADER_Y)
+        # 도망친 지 N일 N시간 N분
+        m = day.minutes()
+        for n, x in ((m // 1440, config.UI_DAY_X), (m // 60 % 24, config.UI_HOUR_X), (m % 60, config.UI_MIN_X)):
+            font_data.draw_number(self.font, n, x, config.UI_HEADER_Y)
 
     def draw_tip(self):
         tip_key = TIP_LISTS[self.zone][self.tip_index]
