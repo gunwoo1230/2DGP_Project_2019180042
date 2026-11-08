@@ -8,12 +8,20 @@ timer = 0.0         # 잡힘·낮 끝이 이어진 시간
 
 
 def reset():
-    pass
+    global phase, best_tile, sun_p, timer
+    phase = 'chase'
+    best_tile = 0
+    sun_p = 0.0
+    timer = 0.0
 
 
 def update(box_x, level):
-    pass
+    # 추격 중에만 점수가 오름, 뒤로 가거나 떨어져도 줄지 않음
+    global best_tile
+    if phase == 'chase':
+        best_tile = max(best_tile, level.tile_index(box_x))
 
 
 def minutes():
-    pass
+    # 점수 = 최고 도달 타일 × 10분
+    return best_tile * config.MINUTES_PER_TILE

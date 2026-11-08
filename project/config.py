@@ -16,6 +16,7 @@ DRAW_MARGIN = 100                       # 화면 밖 이만큼까지는 그림
 FOOT_HALF = 20                          # 발 폭의 절반 (발판 위에 서 있는지 판정)
 SNAP = 8                                # 발밑 발판에 붙는 허용 오차(px)
 FLOOR_YS = (ROAD_Y, LEDGE_Y, ROOF_Y)    # 층 최소 높이
+MINUTES_PER_TILE = 10                   # 건물 1칸 = 10분
 PLATFORM_THICK = {'roof': 20, 'ledge': 12, 'peg': 10, 'accel': 20}  # 임시 그림 두께
 
 # 박스 이동

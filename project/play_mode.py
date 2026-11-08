@@ -17,11 +17,16 @@ from tape import TapeItem
 DROP_KEYS = {SDLK_1: config.ROAD_Y, SDLK_2: config.LEDGE_Y, SDLK_3: config.ROOF_Y}
 
 
-def toggle_zone():
-    global zone
-    zone = 'boss' if zone == 'chase' else 'chase'
+def apply_zone():
+    # 진행 상태에 맞는 구간(추격·보스)을 HUD와 박스에 알림
+    zone = 'boss' if day.phase == 'boss' else 'chase'
     hud.set_zone(zone)
     box.zone = zone
+
+
+def toggle_zone():
+    day.phase = 'chase' if day.phase == 'boss' else 'boss'
+    apply_zone()
 
 
 def spawn_items():
@@ -35,7 +40,7 @@ def spawn_items():
 
 
 def reset():
-    # 박스 위치·생명·테이프 3개·허수아비 횟수를 처음으로 (구간은 유지)
+    # 박스 위치·생명·테이프 3개·허수아비 횟수·점수를 처음으로, 구간은 추격
     game_world.remove_layer(game_world.LAYER_ITEM)
     game_world.remove_layer(game_world.LAYER_FX)
     spawn_items()
@@ -43,12 +48,12 @@ def reset():
     box.reset()
     camera.reset()
     day.reset()
+    apply_zone()
 
 
 def init():
-    global hud, zone, box, level, show_collision_boxes
+    global hud, box, level, show_collision_boxes
     show_collision_boxes = False
-    zone = 'chase'
     day.reset()
     hud = Hud()
     game_world.add_object(Background(), game_world.LAYER_BG)

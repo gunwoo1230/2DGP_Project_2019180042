@@ -33,6 +33,11 @@ class Level:
             color = (255, 140, 0) if p.kind == 'accel' else (255, 0, 0)
             draw_line(camera.to_screen(p.x0), p.y0, camera.to_screen(p.x1), p.y1, *color)
 
+    def tile_index(self, x):
+        # x가 속한 타일 번호 (시작 칸 = 0)
+        i = int((x - config.MAP_LEFT) // config.TILE_W)
+        return min(max(i, 0), len(self.tiles) - 1)
+
     def next_tile_left(self, x):
         # x가 속한 타일의 다음 타일 왼쪽 끝, 마지막 타일이면 None
         i = int((x - config.MAP_LEFT) // config.TILE_W) + 1
