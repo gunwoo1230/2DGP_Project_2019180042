@@ -12,6 +12,11 @@ from state_machine import StateMachine
 from tape import TapePickupFx
 
 
+def floor_of(y):
+    # 발 높이가 속한 층 번호 (0 도로, 1 창틀, 2 지붕), 높이 계산 오차를 막기 위해 +1
+    return max(i for i, floor_y in enumerate(config.FLOOR_YS) if floor_y <= y + 1)
+
+
 # 전환 조건
 def is_moving(box, event):
     return event[0] == 'KEY' and box.dir != 0
@@ -165,9 +170,10 @@ class Jump:
         box.jump_vy = box.vy    # 점프 시작 속도 (높이가 달라도 같은 비율로 그림을 넘기는 기준)
         box.ground = None
         box.on_accel_ground = False
-        # 출발 높이가 속한 층이 시작 층 (높이 계산 오차를 막기 위해 +1)
+        # 출발 높이가 속한 층이 시작 층
         box.takeoff_y = box.y
-        box.floor_y = max(y for y in config.FLOOR_YS if y <= box.takeoff_y + 1)
+        box.floor = floor_of(box.takeoff_y)
+        box.floor_y = config.FLOOR_YS[box.floor]
 
     @staticmethod
     def exit(box, event):
