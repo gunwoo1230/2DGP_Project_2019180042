@@ -86,6 +86,8 @@ TAPE_START, TAPE_MAX = 1, 5             # 생명
 TAPE_PICKUP_TIME = 0.5                  # 초
 TAPE_FLOOR_WEIGHT = {'roof': 5, 'ledge': 3}    # 테이프 층 고르는 가중치 (지붕 : 창틀 층, 도로에는 없음)
 TAPE_ROOF_INSET = 40                    # 지붕 테이프는 지붕 끝에서 이만큼 안쪽에
+FULL_SHOW_TIME, FULL_FADE_TIME = 0.8, 0.2   # 생명 칸이 꽉 찼을 때 "가득 참!" 보이는 시간, 끝에 흐려지는 시간 (초)
+FULL_GAP, FULL_BLINK = 30, 0.1          # "가득 참!"과 박스 머리 사이, 생명 칸 깜빡임 간격 (초)
 TAPE_BB_RATE = 0.8                      # 충돌 박스 = 그림 크기의 80%
 TAPE_BOB_H, TAPE_BOB_TIME = 4, 1        # 둥실 진폭(px), 주기(초)
 

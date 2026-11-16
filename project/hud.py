@@ -111,8 +111,10 @@ class Hud:
         self.zone = 'chase'
         self.tip_index = 0
         self.tip_time = 0.0
+        self.full_time = 0.0    # 생명 칸 깜빡임 남은 시간 (꽉 찼을 때 Shift)
 
     def update(self):
+        self.full_time = max(self.full_time - game_framework.frame_time, 0)
         self.tip_time += game_framework.frame_time
         if self.tip_time >= config.TIP_INTERVAL:
             self.tip_time -= config.TIP_INTERVAL
@@ -140,6 +142,11 @@ class Hud:
     def reset_lives(self):
         self.lives = config.TAPE_START
         self.reserved = 0
+        self.full_time = 0.0
+
+    def flash_full(self):
+        # 꽉 찼는데 주우려 함: 생명 칸을 잠깐 깜빡임
+        self.full_time = config.FULL_SHOW_TIME
 
     def reserve_slot(self):
         # 날아오는 중인 테이프의 칸을 미리 잡아 둠, 그 칸 번호를 돌려줌
@@ -177,6 +184,9 @@ class Hud:
         font_data.draw_tip(self.font, font_data.TIPS[tip_key], config.UI_TIP_X, config.UI_TIP_Y, count=count)
 
     def draw_lives(self):
+        # 가득 참 깜빡임 중에는 FULL_BLINK마다 5칸을 함께 숨김
+        if self.full_time > 0 and int(self.full_time / config.FULL_BLINK) % 2 == 1:
+            return
         for i in range(config.TAPE_MAX):
             alpha = 1 if i < self.lives else config.UI_LIFE_EMPTY_ALPHA
             self.items.opacify(alpha)

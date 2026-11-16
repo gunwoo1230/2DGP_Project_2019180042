@@ -261,6 +261,36 @@ class DizzyFx:
         pass
 
 
+class FullFx:
+    # 생명 칸이 꽉 찼을 때 머리 위 "가득 참!" (박스를 따라다님, 끝에 흐려짐)
+    image = None
+
+    def __init__(self, box):
+        if FullFx.image is None:
+            FullFx.image = load_image('resource/ui_full.png')
+        self.box = box
+        self.time = 0.0
+
+    def update(self):
+        self.time += game_framework.frame_time
+        if self.time >= config.FULL_SHOW_TIME:
+            game_world.remove_object(self)
+
+    def draw(self):
+        left = config.FULL_SHOW_TIME - self.time
+        alpha = min(left / config.FULL_FADE_TIME, 1)
+        w, h = FullFx.image.w * config.SPRITE_SCALE, FullFx.image.h * config.SPRITE_SCALE
+        FullFx.image.opacify(max(alpha, 0))
+        FullFx.image.draw(camera.to_screen(self.box.x), self.box.y + config.BOX_BODY_H + config.FULL_GAP + h / 2, w, h)
+        FullFx.image.opacify(1)
+
+    def get_bb(self):
+        pass
+
+    def handle_collision(self, group, other):
+        pass
+
+
 class Recover:
     @staticmethod
     def enter(box, event):
@@ -448,6 +478,7 @@ class Box:
         self.vx, self.vy = 0.0, 0.0
         self.ground = None      # 서 있는 발판
         self.near_tape = None   # 지금 겹쳐 있는 테이프
+        self.full_fx = None     # 떠 있는 "가득 참!"
         self.slam_cooldown = 0.0
         self.on_accel_ground = False    # 가속 지붕·빨랫줄 위 여부
         self.invincible = 0.0   # 남은 무적 시간 (피격 기절 뒤)
@@ -551,11 +582,24 @@ class Box:
         self.state_machine.update()
         if self.state_machine.cur in GROUND_STATES:
             self.check_ground()
+        self.check_full()
         self.use_buffer()
         self.space_buffer = max(self.space_buffer - game_framework.frame_time, 0)
         self.shift_buffer = max(self.shift_buffer - game_framework.frame_time, 0)
         # 미리 누른 Shift를 처리할 때까지 직전 충돌 결과를 씀, 다음 충돌 처리에서 다시 기록됨
         self.near_tape = None
+
+    def check_full(self):
+        # 생명 칸이 꽉 찬 채 테이프 위에서 Shift: 줍지 못하고 "가득 참!" (박스는 멈추지 않음, 테이프는 남음)
+        if self.shift_buffer > 0 and self.near_tape is not None and self.zone == 'chase'                 and self.hud.is_full() and self.state_machine.cur in (Idle, Walk):
+            self.shift_buffer = 0.0
+            self.hud.flash_full()
+            # 이미 떠 있으면 시간만 처음부터
+            if self.full_fx in game_world.objects[game_world.LAYER_FX]:
+                self.full_fx.time = 0.0
+            else:
+                self.full_fx = FullFx(self)
+                game_world.add_object(self.full_fx, game_world.LAYER_FX)
 
     def use_buffer(self):
         # 땅 위에서 움직일 수 있게 되면 미리 누른 키를 처리
