@@ -16,7 +16,7 @@ STYLES = WIDE_STYLES + NARROW_STYLES + ACCEL_STYLES
 TILES = {
     # 'walls': 벽(건물 몸통) x 범위, 'styles': 양식 후보, 'roof': 지붕 발판 선분,
     # 'zone': 창문 구역 x 범위, 'windows': 창문 수, 'deco': 밟지 않는 장식(배수관·전봇대) 사각형,
-    # 'pegs': 받침·못 (x0, y, x1), 'pipe': 왼쪽 벽 배수관 (타일 안 좌표)
+    # 'pegs': 받침·못 (x0, y, x1), 'pipe': 왼쪽 벽 배수관, 'pole': 왼쪽 빈터 전봇대 (타일 안 좌표)
     'start': {'walls': [], 'styles': (), 'roof': None, 'zone': None, 'windows': 0, 'deco': [], 'pegs': []},
     'basic': {'walls': [(40, 560)], 'styles': WIDE_STYLES, 'roof': ('roof', 40, ROOF_Y, 560, ROOF_Y),
               'zone': (60, 540), 'windows': 3, 'deco': [], 'pegs': []},
@@ -27,8 +27,7 @@ TILES = {
     'gap':   {'walls': [(240, 560)], 'styles': NARROW_STYLES, 'roof': ('roof', 240, ROOF_Y, 560, ROOF_Y),
               'zone': (260, 540), 'windows': 2, 'deco': [], 'pegs': []},
     'pole':  {'walls': [(200, 560)], 'styles': NARROW_STYLES, 'roof': ('roof', 200, ROOF_Y, 560, ROOF_Y),
-              'zone': (220, 540), 'windows': 2, 'deco': [('pole', 92, ROAD_Y, 108, 600)],
-              'pegs': [(70, y, 130) for y in (270, 330, 390, 450, 510)]},
+              'zone': (220, 540), 'windows': 2, 'deco': [], 'pegs': [], 'pole': True},
 }
 
 images = {}
@@ -90,6 +89,8 @@ def build_tile(name, rng):
         tile['windows'] = make_windows(tile_def, rng)
     if tile_def.get('pipe'):
         add_pipe(tile)
+    if tile_def.get('pole'):
+        add_pole(tile)
     make_platforms(tile)
     return tile
 
@@ -128,8 +129,10 @@ def add_pipe(tile):
 
 
 def add_pole(tile):
-    # 왼쪽 빈터 전봇대와 못
-    pass
+    # 왼쪽 빈터 전봇대와 못 (570 못에서 양옆 지붕으로 건너감)
+    x0, x1 = config.POLE_X
+    tile['deco'].append(('pole', x0, ROAD_Y, x1, config.POLE_TOP))
+    tile['pegs'] += [(config.POLE_PEG_X[0], y, config.POLE_PEG_X[1]) for y in config.POLE_PEGS_Y]
 
 
 def draw_tile(tile, left):
