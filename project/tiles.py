@@ -7,8 +7,6 @@ import camera
 import config
 from config import ROAD_Y, ROOF_Y, TILE_W
 
-PEGS_Y = (270, 330, 450, 510)           # 배수관 발디딤 (390은 창틀이 대신함)
-
 # 건물 양식 후보 (그림만 바뀜, 발판은 같음)
 WIDE_STYLES = ('wide_a', 'wide_b')
 NARROW_STYLES = ('narrow_a', 'narrow_b')
@@ -18,13 +16,12 @@ STYLES = WIDE_STYLES + NARROW_STYLES + ACCEL_STYLES
 TILES = {
     # 'walls': 벽(건물 몸통) x 범위, 'styles': 양식 후보, 'roof': 지붕 발판 선분,
     # 'zone': 창문 구역 x 범위, 'windows': 창문 수, 'deco': 밟지 않는 장식(배수관·전봇대) 사각형,
-    # 'pegs': 받침·못 (x0, y, x1) (타일 안 좌표)
+    # 'pegs': 받침·못 (x0, y, x1), 'pipe': 왼쪽 벽 배수관 (타일 안 좌표)
     'start': {'walls': [], 'styles': (), 'roof': None, 'zone': None, 'windows': 0, 'deco': [], 'pegs': []},
     'basic': {'walls': [(40, 560)], 'styles': WIDE_STYLES, 'roof': ('roof', 40, ROOF_Y, 560, ROOF_Y),
               'zone': (60, 540), 'windows': 3, 'deco': [], 'pegs': []},
     'pipe':  {'walls': [(40, 560)], 'styles': WIDE_STYLES, 'roof': ('roof', 40, ROOF_Y, 560, ROOF_Y),
-              'zone': (60, 540), 'windows': 3, 'deco': [('pipe', 82, ROAD_Y, 98, ROOF_Y)],
-              'pegs': [(60, y, 120) for y in PEGS_Y]},
+              'zone': (60, 540), 'windows': 3, 'deco': [], 'pegs': [], 'pipe': True},
     'accel': {'walls': [(40, 560)], 'styles': ACCEL_STYLES, 'roof': ('accel', 40, 630, 560, ROOF_Y),
               'zone': (60, 540), 'windows': 3, 'deco': [], 'pegs': []},
     'gap':   {'walls': [(240, 560)], 'styles': NARROW_STYLES, 'roof': ('roof', 240, ROOF_Y, 560, ROOF_Y),
@@ -91,6 +88,8 @@ def build_tile(name, rng):
     if tile_def['walls']:
         tile['style'] = rng.choice(tile_def['styles'])
         tile['windows'] = make_windows(tile_def, rng)
+    if tile_def.get('pipe'):
+        add_pipe(tile)
     make_platforms(tile)
     return tile
 
@@ -122,8 +121,10 @@ def make_platforms(tile):
 
 
 def add_pipe(tile):
-    # 왼쪽 벽 바깥 배수관과 받침
-    pass
+    # 왼쪽 벽 바깥에 바짝 붙은 배수관, 받침은 앞 타일과의 틈 쪽으로 튀어나옴
+    w0 = tile['walls'][0][0]
+    tile['deco'].append(('pipe', w0 - config.PIPE_W, ROAD_Y, w0, ROOF_Y))
+    tile['pegs'] += [(w0 - config.PIPE_PEG_W, y, w0) for y in config.PIPE_PEGS_Y]
 
 
 def add_pole(tile):
