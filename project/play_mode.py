@@ -13,7 +13,7 @@ from dummy import Dummy
 from guard import Guard
 from hud import Background, GuardMarker, Hud, Sun
 from level import Level
-from map_data import BOSS_ARENA, DAY_MAP, TEST_MAP
+from map_data import BOSS_ARENA, TEST_MAP, make_day_map
 from tape import TapeItem
 
 # 디버그: 지금 x에서 이 높이로 옮겨 떨어뜨림
@@ -51,12 +51,20 @@ def spawn_dummy():
     game_world.add_collision_pair('box:dummy', None, dummy)
 
 
-def restart(tile_names=DAY_MAP):
+def new_map(kind):
+    # 맵 종류('day' 낮 맵 / 'test' 시험 맵)에 맞는 타일 목록과, 이어서 양식·창문·빨랫줄을 정할 난수
+    global map_kind
+    map_kind = kind
+    rng = random.Random(0)      # 임시: 시드 관리는 C12
+    names = make_day_map(rng) if kind == 'day' else TEST_MAP
+    return names, rng
+
+
+def restart(kind='day'):
     # 처음부터 (보통 낮 맵): 박스·경비원·생명·테이프 3개·허수아비·점수·해, 구간은 추격
     game_world.remove_layer(game_world.LAYER_ITEM)
     game_world.remove_layer(game_world.LAYER_FX)
-    if level.names != tile_names:
-        level.load(tile_names, random.Random(0))    # 임시: 시드 관리는 C12
+    level.load(*new_map(kind))
     camera.init(level.right)
     spawn_tapes()
     spawn_dummy()
@@ -88,7 +96,7 @@ def init():
     game_world.add_object(Background(), game_world.LAYER_BG)
     game_world.add_object(Sun(), game_world.LAYER_SKY)
     game_world.add_object(hud, game_world.LAYER_UI)
-    level = Level(DAY_MAP, random.Random(0))     # 임시: 시드 관리는 C12
+    level = Level(*new_map('day'))
     game_world.add_object(level, game_world.LAYER_MAP)
     box = Box(hud, level)
     game_world.add_object(box, game_world.LAYER_BOX)
@@ -171,7 +179,7 @@ def handle_events():
         elif event.type == SDL_KEYDOWN and event.key == SDLK_g:
             guard.enabled = not guard.enabled   # 끄면 멈추고 잡힘·게이지 없음 (맵 시험용)
         elif event.type == SDL_KEYDOWN and event.key == SDLK_m:
-            restart(TEST_MAP if level.names == DAY_MAP else DAY_MAP)
+            restart('test' if map_kind == 'day' else 'day')
         elif event.type == SDL_KEYDOWN and event.key in DROP_KEYS:
             box.drop_to(DROP_KEYS[event.key])
         else:
