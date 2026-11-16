@@ -362,6 +362,25 @@ class Slam:
                      sx=config.SLAM_SX, sy=config.SLAM_SY, rot=-box.slam_dir * config.SLAM_ROT)
 
 
+class Hit:
+    # 방해 요소에 맞음: 모든 발판을 통과해 도로까지 떨어짐
+    @staticmethod
+    def enter(box, event):
+        pass
+
+    @staticmethod
+    def exit(box, event):
+        pass
+
+    @staticmethod
+    def do(box):
+        pass
+
+    @staticmethod
+    def draw(box):
+        pass
+
+
 class Caught:
     # 경비원에게 잡힘: 그 자리에 멈춤, 규칙이 없어 입력을 받지 않음
     @staticmethod
@@ -415,6 +434,7 @@ class Box:
             Fall: [(stunned, Recover), (done_moving, Walk), (done_stopped, Idle)],
             Recover: [(done_moving, Walk), (done_stopped, Idle)],
             Get: [(done_moving, Walk), (done_stopped, Idle)],
+            Hit: [(done_moving, Walk), (done_stopped, Idle)],
         })
 
     def reset(self):
@@ -446,6 +466,9 @@ class Box:
     def catch(self):
         # 어느 상태에서든 바로 잡힘 (회복 중 도는 별은 스스로 지워짐)
         self.state_machine.reset(Caught)
+
+    def hit(self):
+        pass
 
     def drop_to(self, y):
         # 디버그: 그 높이 + 1px에서 공중으로 시작
