@@ -22,6 +22,11 @@ class Level:
         self.platforms = [Platform(kind, x0 + left, y0, x1 + left, y1)
                           for tile, left in self.tiles
                           for kind, x0, y0, x1, y1 in tile['platforms']]
+        self.lines = []     # 빨랫줄 발판 (두 타일에 걸침)
+
+    def make_lines(self, rng):
+        # 이웃한 두 건물의 창틀을 잇는 빨랫줄
+        pass
 
     def update(self):
         pass
@@ -32,6 +37,11 @@ class Level:
             if camera.to_screen(left + config.TILE_W) >= -config.DRAW_MARGIN \
                     and camera.to_screen(left) <= config.SCREEN_W + config.DRAW_MARGIN:
                 draw_tile(tile, left)
+        self.draw_lines()
+
+    def draw_lines(self):
+        # 빨랫줄은 두 타일에 걸치므로 타일을 다 그린 뒤 따로
+        pass
 
     def draw_debug(self):
         # F1: 발판 윗면 선 (빨강, 가속 지붕은 주황)
