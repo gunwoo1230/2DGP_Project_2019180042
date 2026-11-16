@@ -3,7 +3,7 @@ from pico2d import draw_line
 
 import camera
 import config
-from tiles import Platform, build_tile, draw_tile, load_images, make_platforms
+from tiles import Platform, build_tile, draw_slope, draw_tile, images, load_images, make_platforms
 
 
 class Level:
@@ -58,8 +58,12 @@ class Level:
         self.draw_lines()
 
     def draw_lines(self):
-        # 빨랫줄은 두 타일에 걸치므로 타일을 다 그린 뒤 따로
-        pass
+        # 빨랫줄은 두 타일에 걸치므로 타일을 다 그린 뒤 따로, 두 끝이 모두 화면 한쪽 밖이면 건너뜀
+        for line in self.lines:
+            x0, x1 = camera.to_screen(line.x0), camera.to_screen(line.x1)
+            if x1 < -config.DRAW_MARGIN or x0 > config.SCREEN_W + config.DRAW_MARGIN:
+                continue
+            draw_slope(images['line'], x0, line.y0, x1, line.y1, config.PLATFORM_THICK['line'])
 
     def draw_debug(self):
         # F1: 발판 윗면 선 (빨강, 가속 지붕·빨랫줄은 주황)

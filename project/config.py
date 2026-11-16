@@ -33,7 +33,7 @@ POLE_PEGS_Y = (300, 390, 480, 570)      # 전봇대 못 높이, 570에서 양옆
 CLOTHESLINE_CHANCE = 0.3                # 일반 건물 사이 빨랫줄 확률 (accel -> gap 사이는 항상)
 LINE_FROM = ('basic', 'pipe', 'accel', 'gap', 'pole')   # 빨랫줄이 시작될 수 있는 앞 타일
 LINE_TO = ('basic', 'pipe', 'accel')    # 빨랫줄이 이어질 수 있는 다음 타일 (gap은 항상)
-PLATFORM_THICK = {'roof': 20, 'ledge': 12, 'peg': 10, 'accel': 20}  # 임시 그림 두께
+PLATFORM_THICK = {'roof': 20, 'ledge': 12, 'peg': 10, 'accel': 20, 'line': 4}  # 임시 그림 두께
 
 # 박스 이동
 BOX_START_X = 200                       # 시작 위치

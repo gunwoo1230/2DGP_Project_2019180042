@@ -61,6 +61,7 @@ def load_images():
         images['ledge'] = load_image('resource/placeholder/ph_ledge.png')
         images['peg'] = load_image('resource/placeholder/ph_peg.png')
         images['accel'] = load_image('resource/placeholder/ph_accel.png')
+        images['line'] = load_image('resource/placeholder/ph_rope.png')
 
 
 def draw_rect(image, x0, y0, x1, y1):
