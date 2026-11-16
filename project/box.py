@@ -611,6 +611,10 @@ class Box:
             return
         self.state_machine.draw()
 
+    def stands_on(self, kind, x0):
+        # 그 종류의 발판(왼쪽 끝 x0) 위에 서 있는지 (공중·피격 중은 아님)
+        return self.state_machine.cur in GROUND_STATES and self.ground is not None             and self.ground.kind == kind and abs(self.ground.x0 - x0) < 1e-6
+
     def get_bb(self):
         half = config.BOX_BB_W / 2
         return self.x - half, self.y, self.x + half, self.y + config.BOX_BB_H

@@ -29,6 +29,9 @@ DAY_END_TIME = 2                        # 낮 끝에 경비원 지침을 보여 
 WINDOW_W, WINDOW_GAP_MIN = 90, 50       # 창틀 발판 길이(= 창문 폭), 창틀 사이 최소 간격
 WINDOW_YS = (380, 385, 390, 395, 400, 405)  # 창틀 높이 후보 (창문마다 따로 고름)
 WINDOW_H, WINDOW_INSET = 70, 10         # 임시 창문 그림 높이(창틀 위로), 좌우 안쪽 여백
+WINDOW_SHAKE_TIME, WINDOW_OPEN_TIME = 0.3, 1.0  # 살아 있는 창문: 올라선 뒤 덜컹, 열려 있는 시간 (초)
+WINDOW_SHAKE_PX, WINDOW_SHAKE_STEP = 3, 0.05    # 덜컹 흔들림 폭(px, 그림만), 좌우가 바뀌는 간격 (초)
+WINDOW_DOOR_W = 30                      # 열린 문짝 하나 폭 (창문 양옆 바깥으로)
 PIPE_W, PIPE_PEG_W = 16, 60             # 임시 배수관 굵기, 받침 발판 길이
 PIPE_PEGS_Y = (300, 390, 480)           # 배수관 받침 높이 (층 중간 · 창틀 층 · 층 중간), 480에서 지붕으로
 POLE_X, POLE_TOP = (92, 108), 630      # 임시 전봇대 x 범위(타일 안), 위 끝 (570 못보다 위)
