@@ -41,6 +41,9 @@ HAZARD_CHANCE = (0.2, 0.35, 0.5)        # 건물 한 채에 방해 요소가 나
 HAZARD_FREE = 2                         # 첫 건물 몇 채는 방해 요소 없음 (비둘기도)
 PUDDLE_W, PUDDLE_H = 140, 18            # 물웅덩이 크기 (도로 윗면에 걸침)
 PUDDLE_EDGE = 20                        # 물웅덩이를 타일 양쪽 끝에서 이만큼 안쪽에
+PUDDLE_RISE = 6                         # 물웅덩이가 도로 윗면 위로 올라오는 높이 (나머지는 아래로)
+PUDDLE_SLOW, PUDDLE_AFTER = 0.7, 0.5    # 물웅덩이 속도 배율, 나온 뒤 느림이 남는 시간 (초)
+PUDDLE_FLASH = 0.2                      # 물웅덩이에 들어가는 순간 피격 그림을 보여 주는 시간 (초)
 PUDDLE_CLIMB_GAP = 80                   # 물웅덩이를 배수관 받침·전봇대 못 x 범위에서 이만큼 떨어뜨림
 PLATFORM_THICK = {'roof': 20, 'ledge': 12, 'peg': 10, 'accel': 20, 'line': 4}  # 임시 그림 두께
 

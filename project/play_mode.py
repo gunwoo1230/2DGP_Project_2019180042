@@ -58,7 +58,9 @@ def spawn_hazards():
             x, y = tile['windows'][spot[1]]
             game_world.add_object(LiveWindow(left + x, y, box), game_world.LAYER_ITEM)
         else:
-            game_world.add_object(Puddle(left + spot[1]), game_world.LAYER_ITEM)
+            puddle = Puddle(left + spot[1])
+            game_world.add_object(puddle, game_world.LAYER_ITEM)
+            game_world.add_collision_pair('box:puddle', None, puddle)
     if level.chunks:
         game_world.add_object(PigeonSpawner(box, level), game_world.LAYER_ITEM)
 
@@ -135,6 +137,7 @@ def init():
     game_world.add_object(box, game_world.LAYER_BOX)
     game_world.add_collision_pair('box:tape', box, None)
     game_world.add_collision_pair('box:dummy', box, None)
+    game_world.add_collision_pair('box:puddle', box, None)
     spawn_tapes()
     spawn_hazards()
     spawn_dummy()

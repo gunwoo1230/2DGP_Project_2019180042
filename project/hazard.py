@@ -1,20 +1,39 @@
 # 방해 요소: 물웅덩이(도로), 살아 있는 창문(창틀), 비둘기(지붕)
+from pico2d import load_image
+
+import camera
+import config
+
+images = {}
 enabled = True      # 디버그 H로 끄면 감속·창문 열림·비둘기·피격이 모두 없음
+
+
+def load_images():
+    # 다시 시작해도 한 번만 불러옴
+    if not images:
+        images['puddle'] = load_image('resource/placeholder/ph_puddle.png')
 
 
 class Puddle:
     # 도로 물웅덩이: 밟는 동안과 나온 뒤 잠깐 느려짐
     def __init__(self, x):
+        load_images()
         self.x = x      # 왼쪽 끝 월드 x
 
     def update(self):
         pass
 
     def draw(self):
-        pass
+        left, bottom, right, top = self.get_bb()
+        if camera.to_screen(right) < -config.DRAW_MARGIN or camera.to_screen(left) > config.SCREEN_W + config.DRAW_MARGIN:
+            return
+        images['puddle'].draw((camera.to_screen(left) + camera.to_screen(right)) / 2, (bottom + top) / 2,
+                              right - left, top - bottom)
 
     def get_bb(self):
-        pass
+        # 도로 윗면에 걸친 웅덩이 사각형 (박스 쪽에서 발 위치로 다시 판정)
+        top = config.ROAD_Y + config.PUDDLE_RISE
+        return self.x, top - config.PUDDLE_H, self.x + config.PUDDLE_W, top
 
     def handle_collision(self, group, other):
         pass

@@ -137,6 +137,10 @@ class Walk:
 
     @staticmethod
     def draw(box):
+        if box.puddle_flash > 0:
+            # 물웅덩이에 막 들어감: 잠깐 피격 그림 (멈추지는 않음)
+            draw_box(box.sheet, 'hit', 0, camera.to_screen(box.x), box.y, flip=box.face_dir < 0)
+            return
         draw_box(box.sheet, 'jump', box.frame, camera.to_screen(box.x), box.y + Walk.hop_offset(box), flip=box.face_dir < 0)
 
 
@@ -448,6 +452,7 @@ class Box:
         self.on_accel_ground = False    # 가속 지붕·빨랫줄 위 여부
         self.invincible = 0.0   # 남은 무적 시간 (피격 기절 뒤)
         self.from_hit = False   # 지금 기절이 피격에서 온 것인지
+        self.clear_puddle()
         self.clear_input()
         self.state_machine = StateMachine(self, Idle, {
             Idle: [(is_air, Jump), (space_down, Charge), (space_ready, Charge), (can_pick_tape, Get), (can_slam, Slam),
@@ -474,12 +479,35 @@ class Box:
         self.near_tape = None
         self.slam_cooldown = 0.0
         self.clear_hit()
+        self.clear_puddle()
         self.clear_input()
         self.state_machine.reset(Walk if self.dir != 0 else Idle)
 
     def clear_hit(self):
         self.invincible = 0.0
         self.from_hit = False
+
+    def clear_puddle(self):
+        self.puddle_touch = False   # 충돌 처리에서 발이 웅덩이에 닿았는지 (다음 update에서 씀)
+        self.in_puddle = False      # 지금 웅덩이 안
+        self.puddle_after = 0.0     # 남은 느림 시간 (웅덩이 안에서는 계속 PUDDLE_AFTER)
+        self.puddle_flash = 0.0     # 들어간 순간 그림 남은 시간
+
+    def update_puddle(self):
+        # 직전 충돌 결과로 웅덩이 안인지 정함, 나온 뒤에도 잠깐 느림
+        dt = game_framework.frame_time
+        was_in = self.in_puddle
+        self.in_puddle = self.puddle_touch and hazard.enabled
+        self.puddle_touch = False
+        self.puddle_flash = max(self.puddle_flash - dt, 0)
+        if self.in_puddle:
+            self.puddle_after = config.PUDDLE_AFTER
+            if not was_in:
+                self.puddle_flash = config.PUDDLE_FLASH
+        elif hazard.enabled:
+            self.puddle_after = max(self.puddle_after - dt, 0)
+        else:
+            self.puddle_after = 0.0
 
     def clear_input(self):
         # 미리 누른 키 기억 (Space는 누르고 있는지와 방금 눌렀는지를 따로)
@@ -494,6 +522,7 @@ class Box:
         self.vx, self.vy = 0.0, 0.0
         self.on_accel_ground = False
         self.clear_hit()
+        self.clear_puddle()
         self.state_machine.reset(Walk if self.dir != 0 else Idle)
 
     def catch(self):
@@ -518,6 +547,7 @@ class Box:
     def update(self):
         self.slam_cooldown = max(self.slam_cooldown - game_framework.frame_time, 0)
         self.invincible = max(self.invincible - game_framework.frame_time, 0)
+        self.update_puddle()
         self.state_machine.update()
         if self.state_machine.cur in GROUND_STATES:
             self.check_ground()
@@ -609,8 +639,11 @@ class Box:
         return min(self.charge_time / config.CHARGE_MAX_TIME, 1)
 
     def floor_speed(self):
-        # 서 있는 층의 기본 속도 (위층일수록 빠름)
-        return config.FLOOR_SPEEDS[floor_of(self.y)]
+        # 서 있는 층의 기본 속도 (위층일수록 빠름), 물웅덩이 안·나온 뒤 잠깐은 느림
+        speed = config.FLOOR_SPEEDS[floor_of(self.y)]
+        if self.puddle_after > 0:
+            speed *= config.PUDDLE_SLOW
+        return speed
 
     def walk_speed(self):
         # 가속 지붕·빨랫줄 위에서 오른쪽으로 갈 때만 더 빠름
@@ -656,6 +689,11 @@ class Box:
     def handle_collision(self, group, other):
         if group == 'box:tape':
             self.near_tape = other
+        elif group == 'box:puddle':
+            # 도로에 서서 발이 웅덩이와 겹칠 때만 (점프로 넘으면 영향 없음)
+            left, _, right, _ = other.get_bb()
+            if self.state_machine.cur in GROUND_STATES and self.ground and self.ground.kind == 'road'                     and self.x + config.FOOT_HALF >= left and self.x - config.FOOT_HALF <= right:
+                self.puddle_touch = True
         elif group == 'box:dummy':
             if self.state_machine.cur is Slam and not self.slam_returning:
                 other.on_hit()
