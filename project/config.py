@@ -20,6 +20,7 @@ FLOOR_YS = (ROAD_Y, LEDGE_FLOOR_Y, ROOF_Y)  # 층 최소 높이
 DAY_BUILDINGS = 60                      # 낮 맵 건물 수 (시작 칸 빼고)
 CHUNK_LEVELS = (20, 40)                 # 건물 수가 이 값보다 작으면 쉬움 / 보통 조각, 그 밖은 어려움
 CLIMB_TILES = ('pipe', 'pole')          # 조각의 climb 자리에 들어갈 타일 (같은 확률로 고름)
+FIXED_SEED = None                       # 숫자를 넣으면 항상 그 시드로 맵을 만듦 (시험용)
 MINUTES_PER_TILE = 10                   # 건물 1칸 = 10분
 SUN_LEFT_X, SUN_RIGHT_X, SUN_Y = 80, 1520, 770     # 해 일직선 길 (화면 좌표, 플레이 칸 맨 위)
 SUN_SCALE = 0.7                         # 해 그리기 배율

@@ -32,7 +32,7 @@ def toggle_zone():
     if day.phase == 'day_end':
         return
     if day.phase == 'boss' and level.names == BOSS_ARENA:
-        restart()   # 보스 무대에는 추격할 맵이 없으므로 낮 맵 처음부터
+        restart('day')  # 보스 무대에는 추격할 맵이 없으므로 낮 맵 처음부터
         return
     day.phase = 'chase' if day.phase == 'boss' else 'boss'
     apply_zone()
@@ -51,20 +51,31 @@ def spawn_dummy():
     game_world.add_collision_pair('box:dummy', None, dummy)
 
 
-def new_map(kind):
+def new_seed():
+    # 시험용 고정 시드가 있으면 그 값, 없으면 랜덤
+    return config.FIXED_SEED if config.FIXED_SEED is not None else random.randrange(100000)
+
+
+def new_map(kind, same_seed=False):
     # 맵 종류('day' 낮 맵 / 'test' 시험 맵)에 맞는 타일 목록과, 이어서 양식·창문·빨랫줄을 정할 난수
-    global map_kind
+    # 같은 시드면 같은 맵 (버그 재현용)
+    global map_kind, seed
     map_kind = kind
-    rng = random.Random(0)      # 임시: 시드 관리는 C12
+    if not same_seed:
+        seed = new_seed()
+    print(f'seed = {seed}')
+    rng = random.Random(seed)
     names = make_day_map(rng) if kind == 'day' else TEST_MAP
     return names, rng
 
 
-def restart(kind='day'):
-    # 처음부터 (보통 낮 맵): 박스·경비원·생명·테이프 3개·허수아비·점수·해, 구간은 추격
+def restart(kind=None, same_seed=False):
+    # 처음부터 (맵 종류는 그대로, 보스 무대에서는 낮 맵): 박스·경비원·생명·테이프 3개·허수아비·점수·해, 구간은 추격
+    if kind is None:
+        kind = 'day' if level.names == BOSS_ARENA else map_kind
     game_world.remove_layer(game_world.LAYER_ITEM)
     game_world.remove_layer(game_world.LAYER_FX)
-    level.load(*new_map(kind))
+    level.load(*new_map(kind, same_seed))
     camera.init(level.right)
     spawn_tapes()
     spawn_dummy()
@@ -165,7 +176,9 @@ def handle_events():
         elif event.type == SDL_KEYDOWN and event.key == SDLK_F1:
             show_collision_boxes = not show_collision_boxes
         elif event.type == SDL_KEYDOWN and event.key == SDLK_r:
-            restart()
+            restart()       # 새 시드 (새 맵)
+        elif event.type == SDL_KEYDOWN and event.key == SDLK_t:
+            restart(same_seed=True)     # 같은 시드 (같은 맵 다시)
         elif event.type == SDL_KEYDOWN and day.phase == 'caught':
             box.handle_event(event)     # 잡힘 중에는 나머지 디버그 키를 받지 않음
         elif event.type == SDL_KEYDOWN and event.key == SDLK_b:
@@ -179,7 +192,7 @@ def handle_events():
         elif event.type == SDL_KEYDOWN and event.key == SDLK_g:
             guard.enabled = not guard.enabled   # 끄면 멈추고 잡힘·게이지 없음 (맵 시험용)
         elif event.type == SDL_KEYDOWN and event.key == SDLK_m:
-            restart('test' if map_kind == 'day' else 'day')
+            restart('test' if map_kind == 'day' else 'day', same_seed=True)
         elif event.type == SDL_KEYDOWN and event.key in DROP_KEYS:
             box.drop_to(DROP_KEYS[event.key])
         else:
