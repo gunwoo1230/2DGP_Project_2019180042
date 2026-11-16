@@ -3,7 +3,8 @@ from pico2d import draw_line
 
 import camera
 import config
-from tiles import Platform, build_tile, draw_slope, draw_tile, images, load_images, make_platforms
+from map_data import difficulty
+from tiles import Platform, build_tile, climb_x, draw_slope, draw_tile, images, load_images, make_platforms
 
 
 class Level:
@@ -25,6 +26,8 @@ class Level:
         self.platforms = [Platform(kind, x0 + left, y0, x1 + left, y1)
                           for tile, left in self.tiles
                           for kind, x0, y0, x1, y1 in tile['platforms']] + self.lines
+        # 빨랫줄 다음, 같은 난수로 방해 요소 -> 테이프 자리 (같은 시드면 같은 자리)
+        self.hazards = self.place_hazards(rng)
 
     def make_lines(self, rng):
         # 이웃한 두 건물의 창틀을 잇는 빨랫줄: gap 앞은 항상, 그 밖은 가끔
@@ -40,7 +43,34 @@ class Level:
         return lines
 
     def place_hazards(self, rng):
-        pass
+        # 타일마다 None / ('window', 창문 번호) / ('puddle', 타일 안 x), 조각이 없는 맵(보스 무대)은 없음
+        # 첫 건물 몇 채는 없고, 바로 앞 타일과 같은 종류는 연달아 나오지 않음
+        hazards = [None] * len(self.tiles)
+        if rng is None:
+            return hazards
+        prev_kind = None
+        for i, (tile, left) in enumerate(self.tiles):
+            kind = None
+            # 앞 조건이 거짓이면 난수를 쓰지 않음 (참고 구현과 같은 난수 순서)
+            if i > config.HAZARD_FREE and tile['name'] != 'start'                     and rng.random() < config.HAZARD_CHANCE[difficulty(i - 1)]:
+                kind = rng.choice([k for k in ('window', 'puddle') if k != prev_kind])
+                if kind == 'window':
+                    hazards[i] = ('window', rng.randrange(len(tile['windows'])))
+                else:
+                    hazards[i] = ('puddle', self.puddle_x(tile['name'], rng))
+            prev_kind = kind
+        return hazards
+
+    @staticmethod
+    def puddle_x(name, rng):
+        # 물웅덩이 왼쪽 끝 x (타일 안): 오르는 곳에서 PUDDLE_CLIMB_GAP 이상 떨어진 자리 중 하나
+        lo = config.PUDDLE_EDGE
+        hi = config.TILE_W - config.PUDDLE_EDGE - config.PUDDLE_W
+        climb = climb_x(name)
+        if climb is None:
+            return rng.choice(range(lo, hi + 1))
+        a, b = climb[0] - config.PUDDLE_CLIMB_GAP, climb[1] + config.PUDDLE_CLIMB_GAP
+        return rng.choice([x for x in range(lo, hi + 1) if x + config.PUDDLE_W <= a or x >= b])
 
     def place_tapes(self, rng):
         pass

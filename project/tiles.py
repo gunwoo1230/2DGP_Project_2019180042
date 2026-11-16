@@ -136,6 +136,17 @@ def add_pole(tile):
     tile['pegs'] += [(config.POLE_PEG_X[0], y, config.POLE_PEG_X[1]) for y in config.POLE_PEGS_Y]
 
 
+def climb_x(name):
+    # 오르는 곳(배수관 받침·전봇대 못)의 x 범위 (타일 안), 없으면 None
+    tile_def = TILES[name]
+    if tile_def.get('pipe'):
+        w0 = tile_def['walls'][0][0]
+        return w0 - config.PIPE_PEG_W, w0
+    if tile_def.get('pole'):
+        return config.POLE_PEG_X
+    return None
+
+
 def draw_tile(tile, left):
     # 진짜 타일 그림이 오면 이 함수 안에서 교체
     # 순서: 도로 → 벽 → 창문 → 배수관·전봇대 → 발판

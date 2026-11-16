@@ -37,6 +37,11 @@ POLE_PEGS_Y = (300, 390, 480, 570)      # 전봇대 못 높이, 570에서 양옆
 CLOTHESLINE_CHANCE = 0.3                # 일반 건물 사이 빨랫줄 확률 (accel -> gap 사이는 항상)
 LINE_FROM = ('basic', 'pipe', 'accel', 'gap', 'pole')   # 빨랫줄이 시작될 수 있는 앞 타일
 LINE_TO = ('basic', 'pipe', 'accel')    # 빨랫줄이 이어질 수 있는 다음 타일 (gap은 항상)
+HAZARD_CHANCE = (0.2, 0.35, 0.5)        # 건물 한 채에 방해 요소가 나올 확률 (쉬움·보통·어려움 구간)
+HAZARD_FREE = 2                         # 첫 건물 몇 채는 방해 요소 없음 (비둘기도)
+PUDDLE_W, PUDDLE_H = 140, 18            # 물웅덩이 크기 (도로 윗면에 걸침)
+PUDDLE_EDGE = 20                        # 물웅덩이를 타일 양쪽 끝에서 이만큼 안쪽에
+PUDDLE_CLIMB_GAP = 80                   # 물웅덩이를 배수관 받침·전봇대 못 x 범위에서 이만큼 떨어뜨림
 PLATFORM_THICK = {'roof': 20, 'ledge': 12, 'peg': 10, 'accel': 20, 'line': 4}  # 임시 그림 두께
 
 # 박스 이동
