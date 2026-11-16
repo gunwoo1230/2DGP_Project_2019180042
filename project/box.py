@@ -704,8 +704,8 @@ class Box:
             left, _, right, _ = other.get_bb()
             if self.state_machine.cur in GROUND_STATES and self.ground and self.ground.kind == 'road'                     and self.x + config.FOOT_HALF >= left and self.x - config.FOOT_HALF <= right:
                 self.puddle_touch = True
-        elif group == 'box:window':
-            if other.state == 'open':
+        elif group in ('box:window', 'box:pigeon'):
+            if other.state in ('open', 'dash'):     # 열린 창문, 돌진하는 비둘기
                 self.hit()
         elif group == 'box:dummy':
             if self.state_machine.cur is Slam and not self.slam_returning:

@@ -51,6 +51,7 @@ PUDDLE_CLIMB_GAP = 80
 PIGEON_CHECK_TIME = (4, 8)              # 평평한 지붕에 이만큼 있으면 비둘기를 한 번 굴림 (초, 매번 새로 고름)
 PIGEON_SIT_DX, PIGEON_SIT_MARGIN = 500, 60  # 비둘기 앉는 자리: 박스 x + 500, 화면 오른쪽 끝에서 60 안쪽까지
 PIGEON_ALERT_TIME = 0.8                 # 앉아서 "!"를 띄우는 시간 (초)
+PIGEON_FLY_H, PIGEON_SPEED = 35, 600    # 돌진 높이(가운데 = 지붕 + 35), 왼쪽으로 돌진하는 속도 (px/s)
 PIGEON_W, PIGEON_H = 70, 50             # 비둘기 크기 (충돌 박스도 같음)
 ALERT_W, ALERT_H, ALERT_GAP = 24, 44, 10    # "!" 크기, 비둘기 머리와의 간격                   # 물웅덩이를 배수관 받침·전봇대 못 x 범위에서 이만큼 떨어뜨림
 PLATFORM_THICK = {'roof': 20, 'ledge': 12, 'peg': 10, 'accel': 20, 'line': 4}  # 임시 그림 두께

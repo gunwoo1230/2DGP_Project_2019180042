@@ -134,6 +134,7 @@ class PigeonSpawner:
         perched = any(p.kind in ('roof', 'accel') and p.x0 <= x <= p.x1 for p in self.level.platforms)
         self.pigeon = Pigeon(x, perched, self)
         game_world.add_object(self.pigeon, game_world.LAYER_ITEM)
+        game_world.add_collision_pair('box:pigeon', None, self.pigeon)
 
     def attack_done(self):
         self.pigeon = None
@@ -150,20 +151,28 @@ class PigeonSpawner:
 
 
 class Pigeon:
-    # 박스 앞 지붕에 앉아 "!" -> 왼쪽으로 낮게 돌진
+    # 박스 앞 지붕에 앉아 "!" -> 왼쪽으로 낮게 돌진 (높이 고정, 박스를 따라가지 않음)
     def __init__(self, x, perched, spawner):
         load_images()
         self.x = x                  # 가운데 월드 x
         self.y = config.ROOF_Y + config.PIGEON_H / 2    # 가운데, 앉으면 아래 끝이 지붕 높이
         self.perched = perched      # 앉은 자리 아래에 지붕이 있는지 (없으면 떠 있음, 진짜 그림에서 씀)
         self.spawner = spawner
-        self.state = 'sit'          # 'sit' 앉아서 "!"
+        self.state = 'sit'          # 'sit' 앉아서 "!" -> 'dash' 돌진 (이때만 박스를 맞춤)
         self.time = 0.0
 
     def update(self):
-        self.time += game_framework.frame_time
-        if self.state == 'sit' and self.time >= config.PIGEON_ALERT_TIME:
-            self.finish()
+        dt = game_framework.frame_time
+        self.time += dt
+        if self.state == 'sit':
+            if self.time >= config.PIGEON_ALERT_TIME:
+                self.state = 'dash'
+                self.y = config.ROOF_Y + config.PIGEON_FLY_H
+        else:
+            self.x -= config.PIGEON_SPEED * dt
+            # 화면 왼쪽 밖으로 나가면 사라짐
+            if camera.to_screen(self.x + config.PIGEON_W / 2) < -config.DRAW_MARGIN:
+                self.finish()
 
     def finish(self):
         game_world.remove_object(self)
@@ -181,7 +190,8 @@ class Pigeon:
                       bottom + config.ALERT_H)
 
     def get_bb(self):
-        pass
+        hw, hh = config.PIGEON_W / 2, config.PIGEON_H / 2
+        return self.x - hw, self.y - hh, self.x + hw, self.y + hh
 
     def handle_collision(self, group, other):
         pass

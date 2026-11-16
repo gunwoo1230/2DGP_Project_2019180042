@@ -141,6 +141,7 @@ def init():
     game_world.add_collision_pair('box:dummy', box, None)
     game_world.add_collision_pair('box:puddle', box, None)
     game_world.add_collision_pair('box:window', box, None)
+    game_world.add_collision_pair('box:pigeon', box, None)
     spawn_tapes()
     spawn_hazards()
     spawn_dummy()
