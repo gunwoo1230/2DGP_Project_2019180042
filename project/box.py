@@ -401,7 +401,7 @@ class Box:
         self.ground = None      # 서 있는 발판
         self.near_tape = None   # 지금 겹쳐 있는 테이프
         self.slam_cooldown = 0.0
-        self.on_accel_ground = False    # 가속 지붕 위 여부
+        self.on_accel_ground = False    # 가속 지붕·빨랫줄 위 여부
         self.clear_input()
         self.state_machine = StateMachine(self, Idle, {
             Idle: [(is_air, Jump), (space_down, Charge), (space_ready, Charge), (can_pick_tape, Get), (can_slam, Slam),
@@ -508,7 +508,7 @@ class Box:
         if platform:
             self.y = platform.surface_y(self.x)
             self.ground = platform
-            self.on_accel_ground = platform.kind == 'accel'
+            self.on_accel_ground = platform.kind in config.ACCEL_RATES
         else:
             self.state_machine.handle_event(('AIR', None))
 
@@ -547,9 +547,9 @@ class Box:
         return config.FLOOR_SPEEDS[floor_of(self.y)]
 
     def walk_speed(self):
-        # 가속 지붕 위에서 오른쪽으로 갈 때만 더 빠름
+        # 가속 지붕·빨랫줄 위에서 오른쪽으로 갈 때만 더 빠름
         if self.on_accel_ground and self.dir > 0:
-            return self.floor_speed() * config.ACCEL_RATE
+            return self.floor_speed() * config.ACCEL_RATES[self.ground.kind]
         return self.floor_speed()
 
     def charge_speed(self):

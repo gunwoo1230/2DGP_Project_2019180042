@@ -68,7 +68,7 @@ class Level:
     def draw_debug(self):
         # F1: 발판 윗면 선 (빨강, 가속 지붕·빨랫줄은 주황)
         for p in self.platforms:
-            color = (255, 140, 0) if p.kind in ('accel', 'line') else (255, 0, 0)
+            color = (255, 140, 0) if p.kind in config.ACCEL_RATES else (255, 0, 0)
             draw_line(camera.to_screen(p.x0), p.y0, camera.to_screen(p.x1), p.y1, *color)
 
     def tile_index(self, x):
