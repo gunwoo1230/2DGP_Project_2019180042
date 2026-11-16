@@ -1,4 +1,6 @@
 # 플레이 모드
+import random
+
 from pico2d import *
 
 import camera
@@ -54,7 +56,7 @@ def restart(tile_names=DAY_MAP):
     game_world.remove_layer(game_world.LAYER_ITEM)
     game_world.remove_layer(game_world.LAYER_FX)
     if level.names != tile_names:
-        level.load(tile_names)
+        level.load(tile_names, random.Random(0))    # 임시: 시드 관리는 C12
     camera.init(level.right)
     spawn_tapes()
     spawn_dummy()
@@ -71,7 +73,7 @@ def to_boss():
     # 날아가는 중인 테이프 연출은 생명 칸에 들어가야 하므로 FX 레이어는 지우지 않음
     day.phase = 'boss'
     apply_zone()
-    level.load(BOSS_ARENA)
+    level.load(BOSS_ARENA, None)     # 빈터는 난수를 쓰지 않음
     camera.init(level.right)
     game_world.remove_layer(game_world.LAYER_ITEM)     # 바닥 테이프·경비원
     spawn_dummy()
@@ -86,7 +88,7 @@ def init():
     game_world.add_object(Background(), game_world.LAYER_BG)
     game_world.add_object(Sun(), game_world.LAYER_SKY)
     game_world.add_object(hud, game_world.LAYER_UI)
-    level = Level(DAY_MAP)
+    level = Level(DAY_MAP, random.Random(0))     # 임시: 시드 관리는 C12
     game_world.add_object(level, game_world.LAYER_MAP)
     box = Box(hud, level)
     game_world.add_object(box, game_world.LAYER_BOX)

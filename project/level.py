@@ -3,34 +3,35 @@ from pico2d import draw_line
 
 import camera
 import config
-from tiles import TILES, Platform, draw_tile, load_images
+from tiles import Platform, build_tile, draw_tile, load_images
 
 
 class Level:
-    def __init__(self, tile_names):
+    def __init__(self, tile_names, rng):
         load_images()
-        self.load(tile_names)
+        self.load(tile_names, rng)
 
-    def load(self, tile_names):
-        # 레벨 교체 (박스가 이 객체를 들고 있으므로 내용만 바꿈)
+    def load(self, tile_names, rng):
+        # 레벨 교체 (박스가 이 객체를 들고 있으므로 내용만 바꿈), 난수로 타일마다 양식·창문을 정함
         self.names = tile_names
-        # (타일 이름, 왼쪽 끝 월드 x)
-        self.tiles = [(name, config.MAP_LEFT + config.TILE_W * i) for i, name in enumerate(tile_names)]
+        # (만든 타일, 왼쪽 끝 월드 x)
+        self.tiles = [(build_tile(name, rng), config.MAP_LEFT + config.TILE_W * i)
+                      for i, name in enumerate(tile_names)]
         self.right = config.MAP_LEFT + config.TILE_W * len(tile_names)
         # 타일의 발판을 왼쪽 끝만큼 옮겨 월드 좌표로
         self.platforms = [Platform(kind, x0 + left, y0, x1 + left, y1)
-                          for name, left in self.tiles
-                          for kind, x0, y0, x1, y1 in TILES[name]['platforms']]
+                          for tile, left in self.tiles
+                          for kind, x0, y0, x1, y1 in tile['platforms']]
 
     def update(self):
         pass
 
     def draw(self):
-        for name, left in self.tiles:
+        for tile, left in self.tiles:
             # 타일 양쪽 끝이 모두 화면 밖이면 건너뜀
             if camera.to_screen(left + config.TILE_W) >= -config.DRAW_MARGIN \
                     and camera.to_screen(left) <= config.SCREEN_W + config.DRAW_MARGIN:
-                draw_tile(name, left)
+                draw_tile(tile, left)
 
     def draw_debug(self):
         # F1: 발판 윗면 선 (빨강, 가속 지붕은 주황)

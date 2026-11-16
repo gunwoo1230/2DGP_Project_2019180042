@@ -80,9 +80,34 @@ def draw_slope(image, x0, y0, x1, y1, thick):
     image.composite_draw(math.atan2(dy, dx), '', cx, cy, length, thick)
 
 
-def draw_tile(name, left):
+def build_tile(name, rng):
+    # 타일 하나를 만듦: 그릴 것과 발판 (타일 안 좌표), 난수는 양식·창문에 씀
+    tile_def = TILES[name]
+    return {'name': name, 'style': None,
+            'walls': list(tile_def['walls']),
+            'windows': [],      # 창문 그림 사각형
+            'pegs': [],         # 받침·못 하나씩
+            'deco': list(tile_def['deco']),
+            'platforms': list(tile_def['platforms'])}
+
+
+def make_windows(tile_def, rng):
+    # 창문 위치·높이를 랜덤으로
+    pass
+
+
+def add_pipe(tile):
+    # 왼쪽 벽 바깥 배수관과 받침
+    pass
+
+
+def add_pole(tile):
+    # 왼쪽 빈터 전봇대와 못
+    pass
+
+
+def draw_tile(tile, left):
     # 진짜 타일 그림이 오면 이 함수 안에서 한 장으로 교체
-    tile = TILES[name]
     screen_left = camera.to_screen(left)
     draw_rect(images['road'], screen_left, config.PLAY_BOTTOM, screen_left + TILE_W, ROAD_Y)
     for x0, x1 in tile['walls']:
