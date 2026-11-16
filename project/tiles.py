@@ -5,14 +5,9 @@ from pico2d import load_image
 
 import camera
 import config
-from config import LEDGE_Y, ROAD_Y, ROOF_Y, TILE_W
+from config import ROAD_Y, ROOF_Y, TILE_W
 
 PEGS_Y = (270, 330, 450, 510)           # 배수관 발디딤 (390은 창틀이 대신함)
-
-
-def basic_ledges():
-    return [('ledge', a, LEDGE_Y, a + 120, LEDGE_Y) for a in (60, 240, 420)]
-
 
 # 건물 양식 후보 (그림만 바뀜, 발판은 같음)
 WIDE_STYLES = ('wide_a', 'wide_b')
@@ -21,27 +16,23 @@ ACCEL_STYLES = ('accel_a', 'accel_b')
 STYLES = WIDE_STYLES + NARROW_STYLES + ACCEL_STYLES
 
 TILES = {
-    # 'walls': 벽(건물 몸통) x 범위, 'styles': 양식 후보, 'deco': 밟지 않는 장식(배수관·전봇대) 사각형,
-    # 'platforms': 발판 선분 (타일 안 좌표)
-    'start': {'walls': [], 'styles': (), 'deco': [], 'platforms': []},
-    'basic': {'walls': [(40, 560)], 'styles': WIDE_STYLES, 'deco': [],
-              'platforms': [('roof', 40, ROOF_Y, 560, ROOF_Y)] + basic_ledges()},
-    'pipe':  {'walls': [(40, 560)], 'styles': WIDE_STYLES, 'deco': [('pipe', 82, ROAD_Y, 98, ROOF_Y)],
-              'platforms': [('roof', 40, ROOF_Y, 560, ROOF_Y)] + basic_ledges()
-                           + [('peg', 60, y, 120, y) for y in PEGS_Y]},
-    'pole':  {'walls': [(200, 560)], 'styles': NARROW_STYLES, 'deco': [('pole', 92, ROAD_Y, 108, 600)],
-              'platforms': [('roof', 200, ROOF_Y, 560, ROOF_Y),
-                            ('ledge', 220, LEDGE_Y, 340, LEDGE_Y), ('ledge', 420, LEDGE_Y, 540, LEDGE_Y)]
-                           + [('peg', 70, y, 130, y) for y in (270, 330, 390, 450, 510)]},
-    'accel': {'walls': [(40, 560)], 'styles': ACCEL_STYLES, 'deco': [],
-              'platforms': [('accel', 40, 630, 560, ROOF_Y)] + basic_ledges()},
-    'gap':   {'walls': [(240, 560)], 'styles': NARROW_STYLES, 'deco': [],
-              'platforms': [('roof', 240, ROOF_Y, 560, ROOF_Y),
-                            ('ledge', 260, LEDGE_Y, 380, LEDGE_Y), ('ledge', 440, LEDGE_Y, 540, LEDGE_Y)]},
+    # 'walls': 벽(건물 몸통) x 범위, 'styles': 양식 후보, 'roof': 지붕 발판 선분,
+    # 'zone': 창문 구역 x 범위, 'windows': 창문 수, 'deco': 밟지 않는 장식(배수관·전봇대) 사각형,
+    # 'pegs': 받침·못 (x0, y, x1) (타일 안 좌표)
+    'start': {'walls': [], 'styles': (), 'roof': None, 'zone': None, 'windows': 0, 'deco': [], 'pegs': []},
+    'basic': {'walls': [(40, 560)], 'styles': WIDE_STYLES, 'roof': ('roof', 40, ROOF_Y, 560, ROOF_Y),
+              'zone': (60, 540), 'windows': 3, 'deco': [], 'pegs': []},
+    'pipe':  {'walls': [(40, 560)], 'styles': WIDE_STYLES, 'roof': ('roof', 40, ROOF_Y, 560, ROOF_Y),
+              'zone': (60, 540), 'windows': 3, 'deco': [('pipe', 82, ROAD_Y, 98, ROOF_Y)],
+              'pegs': [(60, y, 120) for y in PEGS_Y]},
+    'accel': {'walls': [(40, 560)], 'styles': ACCEL_STYLES, 'roof': ('accel', 40, 630, 560, ROOF_Y),
+              'zone': (60, 540), 'windows': 3, 'deco': [], 'pegs': []},
+    'gap':   {'walls': [(240, 560)], 'styles': NARROW_STYLES, 'roof': ('roof', 240, ROOF_Y, 560, ROOF_Y),
+              'zone': (260, 540), 'windows': 2, 'deco': [], 'pegs': []},
+    'pole':  {'walls': [(200, 560)], 'styles': NARROW_STYLES, 'roof': ('roof', 200, ROOF_Y, 560, ROOF_Y),
+              'zone': (220, 540), 'windows': 2, 'deco': [('pole', 92, ROAD_Y, 108, 600)],
+              'pegs': [(70, y, 130) for y in (270, 330, 390, 450, 510)]},
 }
-# 모든 타일 맨 아래에 도로 (끊기지 않음)
-for tile in TILES.values():
-    tile['platforms'].insert(0, ('road', 0, ROAD_Y, TILE_W, ROAD_Y))
 
 images = {}
 
@@ -68,6 +59,7 @@ def load_images():
         images['road'] = load_image('resource/placeholder/ph_ground.png')
         for style in STYLES:
             images['wall_' + style] = load_image(f'resource/placeholder/ph_wall_{style}.png')
+        images['window'] = load_image('resource/placeholder/ph_window.png')
         images['deco'] = load_image('resource/placeholder/ph_pipe.png')
         images['roof'] = load_image('resource/placeholder/ph_roof.png')
         images['ledge'] = load_image('resource/placeholder/ph_ledge.png')
@@ -91,18 +83,42 @@ def draw_slope(image, x0, y0, x1, y1, thick):
 def build_tile(name, rng):
     # 타일 하나를 만듦: 그릴 것과 발판 (타일 안 좌표), 난수는 양식·창문에 씀
     tile_def = TILES[name]
-    style = rng.choice(tile_def['styles']) if tile_def['walls'] else None
-    return {'name': name, 'style': style,
+    tile = {'name': name, 'style': None, 'roof': tile_def['roof'],
             'walls': list(tile_def['walls']),
-            'windows': [],      # 창문 그림 사각형
-            'pegs': [],         # 받침·못 하나씩
-            'deco': list(tile_def['deco']),
-            'platforms': list(tile_def['platforms'])}
+            'windows': [],      # 창문 (왼쪽 끝 x, 창틀 y)
+            'pegs': list(tile_def['pegs']),     # 받침·못 하나씩
+            'deco': list(tile_def['deco'])}
+    if tile_def['walls']:
+        tile['style'] = rng.choice(tile_def['styles'])
+        tile['windows'] = make_windows(tile_def, rng)
+    make_platforms(tile)
+    return tile
 
 
 def make_windows(tile_def, rng):
-    # 창문 위치·높이를 랜덤으로
-    pass
+    # 창문 위치·높이를 랜덤으로: 남는 폭을 창문 앞·사이·뒤 빈칸에 랜덤하게 나눠 줌
+    z0, z1 = tile_def['zone']
+    n = tile_def['windows']
+    free = (z1 - z0) - n * config.WINDOW_W - (n - 1) * config.WINDOW_GAP_MIN
+    cuts = sorted(rng.random() * free for _ in range(n))
+    windows = []
+    x, prev = z0, 0
+    for cut in cuts:
+        x += cut - prev
+        prev = cut
+        windows.append((round(x), rng.choice(config.WINDOW_YS)))
+        x += config.WINDOW_W + config.WINDOW_GAP_MIN
+    return windows
+
+
+def make_platforms(tile):
+    # 발판 목록 (도로 → 지붕 → 창틀 → 받침·못), 받침을 빼면 다시 만듦
+    platforms = [('road', 0, ROAD_Y, TILE_W, ROAD_Y)]
+    if tile['roof']:
+        platforms.append(tile['roof'])
+    platforms += [('ledge', x, y, x + config.WINDOW_W, y) for x, y in tile['windows']]
+    platforms += [('peg', x0, y, x1, y) for x0, y, x1 in tile['pegs']]
+    tile['platforms'] = platforms
 
 
 def add_pipe(tile):
@@ -116,11 +132,16 @@ def add_pole(tile):
 
 
 def draw_tile(tile, left):
-    # 진짜 타일 그림이 오면 이 함수 안에서 한 장으로 교체
+    # 진짜 타일 그림이 오면 이 함수 안에서 교체
+    # 순서: 도로 → 벽 → 창문 → 배수관·전봇대 → 발판
     screen_left = camera.to_screen(left)
     draw_rect(images['road'], screen_left, config.PLAY_BOTTOM, screen_left + TILE_W, ROAD_Y)
     for x0, x1 in tile['walls']:
         draw_rect(images['wall_' + tile['style']], screen_left + x0, ROAD_Y, screen_left + x1, ROOF_Y)
+    inset = config.WINDOW_INSET
+    for x, y in tile['windows']:
+        draw_rect(images['window'], screen_left + x + inset, y, screen_left + x + config.WINDOW_W - inset,
+                  y + config.WINDOW_H)
     for _, x0, y0, x1, y1 in tile['deco']:
         draw_rect(images['deco'], screen_left + x0, y0, screen_left + x1, y1)
     for kind, x0, y0, x1, y1 in tile['platforms']:

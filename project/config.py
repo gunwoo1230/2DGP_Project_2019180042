@@ -21,6 +21,9 @@ SUN_LEFT_X, SUN_RIGHT_X, SUN_Y = 80, 1520, 770     # 해 일직선 길 (화면 �
 SUN_SCALE = 0.7                         # 해 그리기 배율
 SUN_SPEED = 0.05                        # 그리는 해의 진행률이 따라가는 속도 (초당)
 DAY_END_TIME = 2                        # 낮 끝에 경비원 지침을 보여 주는 시간 (초)
+WINDOW_W, WINDOW_GAP_MIN = 90, 50       # 창틀 발판 길이(= 창문 폭), 창틀 사이 최소 간격
+WINDOW_YS = (380, 385, 390, 395, 400, 405)  # 창틀 높이 후보 (창문마다 따로 고름)
+WINDOW_H, WINDOW_INSET = 70, 10         # 임시 창문 그림 높이(창틀 위로), 좌우 안쪽 여백
 PLATFORM_THICK = {'roof': 20, 'ledge': 12, 'peg': 10, 'accel': 20}  # 임시 그림 두께
 
 # 박스 이동
