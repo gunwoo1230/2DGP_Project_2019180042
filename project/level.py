@@ -3,7 +3,7 @@ from pico2d import draw_line
 
 import camera
 import config
-from tiles import Platform, build_tile, draw_tile, load_images
+from tiles import Platform, build_tile, draw_tile, load_images, make_platforms
 
 
 class Level:
@@ -18,15 +18,33 @@ class Level:
         self.tiles = [(build_tile(name, rng), config.MAP_LEFT + config.TILE_W * i)
                       for i, name in enumerate(tile_names)]
         self.right = config.MAP_LEFT + config.TILE_W * len(tile_names)
+        # 빨랫줄 발판 (두 타일에 걸침), 모든 타일을 만든 뒤 같은 난수로 정함
+        self.lines = self.make_lines(rng)
         # 타일의 발판을 왼쪽 끝만큼 옮겨 월드 좌표로
         self.platforms = [Platform(kind, x0 + left, y0, x1 + left, y1)
                           for tile, left in self.tiles
-                          for kind, x0, y0, x1, y1 in tile['platforms']]
-        self.lines = []     # 빨랫줄 발판 (두 타일에 걸침)
+                          for kind, x0, y0, x1, y1 in tile['platforms']] + self.lines
 
     def make_lines(self, rng):
-        # 이웃한 두 건물의 창틀을 잇는 빨랫줄
-        pass
+        # 이웃한 두 건물의 창틀을 잇는 빨랫줄: gap 앞은 항상, 그 밖은 가끔
+        # 앞 건물 마지막 창틀 오른쪽 끝 -> 다음 건물 첫 창틀 왼쪽 끝
+        lines = []
+        for (prev, prev_left), (tile, left) in zip(self.tiles, self.tiles[1:]):
+            if tile['name'] == 'gap' or (prev['name'] in config.LINE_FROM and tile['name'] in config.LINE_TO
+                                         and rng.random() < config.CLOTHESLINE_CHANCE):
+                px, py = prev['windows'][-1]
+                nx, ny = tile['windows'][0]
+                lines.append(Platform('line', prev_left + px + config.WINDOW_W, py, left + nx, ny))
+                self.remove_line_pegs(tile)
+        return lines
+
+    @staticmethod
+    def remove_line_pegs(tile):
+        # 빨랫줄이 배수관 앞 틈을 지나면 줄 높이(창틀 높이 범위)의 받침을 뺌 (줄이 대신함)
+        low, high = min(config.WINDOW_YS), max(config.WINDOW_YS)
+        if tile['name'] == 'pipe':
+            tile['pegs'] = [peg for peg in tile['pegs'] if not low <= peg[1] <= high]
+            make_platforms(tile)
 
     def update(self):
         pass
@@ -44,9 +62,9 @@ class Level:
         pass
 
     def draw_debug(self):
-        # F1: 발판 윗면 선 (빨강, 가속 지붕은 주황)
+        # F1: 발판 윗면 선 (빨강, 가속 지붕·빨랫줄은 주황)
         for p in self.platforms:
-            color = (255, 140, 0) if p.kind == 'accel' else (255, 0, 0)
+            color = (255, 140, 0) if p.kind in ('accel', 'line') else (255, 0, 0)
             draw_line(camera.to_screen(p.x0), p.y0, camera.to_screen(p.x1), p.y1, *color)
 
     def tile_index(self, x):
