@@ -39,8 +39,9 @@ def toggle_zone():
 
 
 def spawn_tapes():
-    for x in config.TAPE_XS:
-        tape = TapeItem(x)
+    # 레벨이 정한 자리마다 (조각당 1개, 보스 무대에는 없음)
+    for x, y in level.tapes:
+        tape = TapeItem(x, y)
         game_world.add_object(tape, game_world.LAYER_ITEM)
         game_world.add_collision_pair('box:tape', None, tape)
 
@@ -73,7 +74,7 @@ def new_map(kind, same_seed=False):
 
 
 def restart(kind=None, same_seed=False):
-    # 처음부터 (맵 종류는 그대로, 보스 무대에서는 낮 맵): 박스·경비원·생명·테이프 3개·허수아비·점수·해, 구간은 추격
+    # 처음부터 (맵 종류는 그대로, 보스 무대에서는 낮 맵): 박스·경비원·생명·테이프·허수아비·점수·해, 구간은 추격
     if kind is None:
         kind = 'day' if level.names == BOSS_ARENA else map_kind
     game_world.remove_layer(game_world.LAYER_ITEM)

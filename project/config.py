@@ -69,7 +69,8 @@ INPUT_BUFFER_TIME = 0.15                # 미리 누른 키를 기억하는 시�
 # 테이프
 TAPE_START, TAPE_MAX = 1, 5             # 생명
 TAPE_PICKUP_TIME = 0.5                  # 초
-TAPE_XS = (500, 900, 1300)              # 바닥 테이프 위치
+TAPE_FLOOR_WEIGHT = {'roof': 5, 'ledge': 3}    # 테이프 층 고르는 가중치 (지붕 : 창틀 층, 도로에는 없음)
+TAPE_ROOF_INSET = 40                    # 지붕 테이프는 지붕 끝에서 이만큼 안쪽에
 TAPE_BB_RATE = 0.8                      # 충돌 박스 = 그림 크기의 80%
 TAPE_BOB_H, TAPE_BOB_TIME = 4, 1        # 둥실 진폭(px), 주기(초)
 

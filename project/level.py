@@ -28,6 +28,7 @@ class Level:
                           for kind, x0, y0, x1, y1 in tile['platforms']] + self.lines
         # 빨랫줄 다음, 같은 난수로 방해 요소 -> 테이프 자리 (같은 시드면 같은 자리)
         self.hazards = self.place_hazards(rng)
+        self.tapes = self.place_tapes(rng)
 
     def make_lines(self, rng):
         # 이웃한 두 건물의 창틀을 잇는 빨랫줄: gap 앞은 항상, 그 밖은 가끔
@@ -73,7 +74,35 @@ class Level:
         return rng.choice([x for x in range(lo, hi + 1) if x + config.PUDDLE_W <= a or x >= b])
 
     def place_tapes(self, rng):
-        pass
+        # 조각마다 테이프 1개 (월드 x, 발 높이 y): 층을 가중치로 고른 뒤 그 층 자리 중 하나
+        # 지붕 = 지붕·가속 지붕 발판 위 아무 x, 창틀 층 = 살아 있지 않은 창틀 가운데·빨랫줄 가운데
+        tapes = []
+        if rng is None:
+            return tapes
+        for first, last in self.chunks:
+            spots = {'roof': [], 'ledge': []}
+            for i in range(first, last + 1):
+                tile, left = self.tiles[i]
+                for kind, x0, y0, x1, y1 in tile['platforms']:
+                    if kind in ('roof', 'accel'):
+                        spots['roof'].append(Platform(kind, left + x0, y0, left + x1, y1))
+                for j, (x, y) in enumerate(tile['windows']):
+                    if self.hazards[i] != ('window', j):
+                        spots['ledge'].append((left + x + config.WINDOW_W / 2, y))
+            # 빨랫줄은 왼쪽 끝이 있는 타일의 조각에 속함
+            for line in self.lines:
+                if first <= self.tile_index(line.x0) <= last:
+                    spots['ledge'].append(((line.x0 + line.x1) / 2, (line.y0 + line.y1) / 2))
+            # 후보 층이 하나여도 choices를 씀 (참고 구현과 같은 난수 순서)
+            floors = [floor for floor in ('roof', 'ledge') if spots[floor]]
+            floor = rng.choices(floors, weights=[config.TAPE_FLOOR_WEIGHT[f] for f in floors])[0]
+            spot = rng.choice(spots[floor])
+            if floor == 'roof':
+                x = rng.uniform(spot.x0 + config.TAPE_ROOF_INSET, spot.x1 - config.TAPE_ROOF_INSET)
+                tapes.append((x, spot.surface_y(x)))     # 가속 지붕은 경사 높이
+            else:
+                tapes.append(spot)
+        return tapes
 
     @staticmethod
     def remove_line_pegs(tile):

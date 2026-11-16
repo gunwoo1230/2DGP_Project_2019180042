@@ -1,4 +1,4 @@
-# 테이프: 바닥 테이프와 줍기 연출
+# 테이프: 맵 테이프(지붕·창틀·빨랫줄 위)와 줍기 연출
 import math
 
 from pico2d import load_image
@@ -16,11 +16,12 @@ TAPE_H = ITEM_RECT['tape'][0][3] * SCALE
 class TapeItem:
     image = None
 
-    def __init__(self, x):
+    def __init__(self, x, y):
+        # (x, y) = 놓인 발판 윗면
         if TapeItem.image is None:
             TapeItem.image = load_image('resource/item_sheet.png')
         self.x = x
-        self.y = config.ROAD_Y + TAPE_H / 2   # 그림의 가운데
+        self.y = y + TAPE_H / 2   # 그림의 가운데
         self.bob_time = 0.0
 
     def update(self):
