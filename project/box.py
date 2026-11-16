@@ -47,6 +47,11 @@ def stunned(box, event):
     return event[0] == 'DONE' and box.floor > 0 and box.y <= config.FLOOR_YS[box.floor - 1] + 1
 
 
+def landed(box, event):
+    # 피격 추락이 도로에 닿음 (떨어진 높이만큼 항상 기절)
+    return event[0] == 'DONE'
+
+
 def space_down(box, event):
     return event[0] == 'KEY' and event[1].type == SDL_KEYDOWN and event[1].key == SDLK_SPACE
 
@@ -363,10 +368,17 @@ class Slam:
 
 
 class Hit:
-    # 방해 요소에 맞음: 모든 발판을 통과해 도로까지 떨어짐
+    # 방해 요소에 맞음: 뒤로 밀리며 모든 발판을 통과해 도로까지 떨어짐, 좌우 조작 없음
     @staticmethod
     def enter(box, event):
-        pass
+        box.frame = 0
+        box.hit_time = 0.0
+        box.takeoff_y = box.y       # 맞은 높이에서 떨어진 만큼 기절
+        box.vx = -box.face_dir * config.HIT_KNOCK_VX
+        box.vy = config.HIT_KNOCK_VY
+        box.ground = None
+        box.on_accel_ground = False
+        box.clear_input()
 
     @staticmethod
     def exit(box, event):
@@ -374,11 +386,19 @@ class Hit:
 
     @staticmethod
     def do(box):
-        pass
+        dt = game_framework.frame_time
+        box.hit_time += dt
+        if box.hit_time >= config.HIT_POSE_TIME:
+            box.frame = min(box.frame + config.ANIM_FPS_FALL * dt, Fall.LAST_FRAME)
+        if box.move_in_air(control=False, kinds=('road',)):
+            box.state_machine.handle_event(('DONE', None))
 
     @staticmethod
     def draw(box):
-        pass
+        if box.hit_time < config.HIT_POSE_TIME:
+            draw_box(box.sheet, 'hit', 0, camera.to_screen(box.x), box.y, flip=box.face_dir < 0)
+        else:
+            draw_box(box.sheet, 'fall', box.frame, camera.to_screen(box.x), box.y, flip=box.face_dir < 0)
 
 
 class Caught:
@@ -434,7 +454,7 @@ class Box:
             Fall: [(stunned, Recover), (done_moving, Walk), (done_stopped, Idle)],
             Recover: [(done_moving, Walk), (done_stopped, Idle)],
             Get: [(done_moving, Walk), (done_stopped, Idle)],
-            Hit: [(done_moving, Walk), (done_stopped, Idle)],
+            Hit: [(landed, Recover)],
         })
 
     def reset(self):
@@ -468,7 +488,12 @@ class Box:
         self.state_machine.reset(Caught)
 
     def hit(self):
-        pass
+        # 방해 요소에 맞음 (추격 구간에서, 이미 맞았거나 기절·잡힘 중이 아니고, 도로에 서 있지 않을 때)
+        if self.zone != 'chase' or self.state_machine.cur in (Hit, Recover, Caught):
+            return
+        if self.state_machine.cur in GROUND_STATES and self.ground and self.ground.kind == 'road':
+            return
+        self.state_machine.reset(Hit)
 
     def drop_to(self, y):
         # 디버그: 그 높이 + 1px에서 공중으로 시작
@@ -501,14 +526,14 @@ class Box:
         elif self.shift_buffer > 0:
             self.state_machine.handle_event(('BUFFER', None))
 
-    def move_in_air(self):
-        # Jump·Fall 공통 공중 이동, 착지했으면 True
+    def move_in_air(self, control=True, kinds=None):
+        # Jump·Fall·Hit 공통 공중 이동, 착지했으면 True
+        # control: 좌우 조작을 받는지, kinds: 착지할 수 있는 발판 종류 (None이면 모두)
         dt = game_framework.frame_time
         prev_x, prev_y = self.x, self.y
         # 공중 좌우 조작: 입력이 있으면 목표 속도로 천천히 변함, 없으면 유지
         # 같은 방향으로 출발 층 속도보다 빠르면 줄이지 않음 (가속 지붕에서 얻은 속도 유지)
-        keeps_speed = self.vx * self.dir > 0 and abs(self.vx) > self.air_speed
-        if self.dir != 0 and not keeps_speed:
+        if control and self.dir != 0 and not (self.vx * self.dir > 0 and abs(self.vx) > self.air_speed):
             diff = self.dir * self.air_speed - self.vx
             change = config.AIR_ACCEL * dt
             self.vx += diff if abs(diff) <= change else math.copysign(change, diff)
@@ -518,7 +543,7 @@ class Box:
         self.y += self.vy * dt - 0.5 * config.GRAVITY * dt * dt
         self.vy -= config.GRAVITY * dt
         # 내려오는 중에만 밟힘 (아래에서 위로는 통과)
-        platform = self.level.find_landing(prev_x, prev_y, self.x, self.y) if self.vy <= 0 else None
+        platform = self.level.find_landing(prev_x, prev_y, self.x, self.y, kinds) if self.vy <= 0 else None
         if platform:
             self.y = platform.surface_y(self.x)
             self.vy = 0

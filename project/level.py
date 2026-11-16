@@ -147,10 +147,12 @@ class Level:
         i = int((x - config.MAP_LEFT) // config.TILE_W) + 1
         return self.tiles[i][1] if i < len(self.tiles) else None
 
-    def find_landing(self, prev_x, prev_y, x, y):
+    def find_landing(self, prev_x, prev_y, x, y, kinds=None):
         # 위에서 윗면을 지나 내려온 발판 중 가장 높은 것 (경사가 있어 각 위치의 윗면과 비교)
+        # kinds가 있으면 그 종류 발판에만 착지 (피격 추락은 도로만)
         hits = [p for p in self.platforms
-                if p.covers(x) and prev_y >= p.surface_y(prev_x) and p.surface_y(x) > y]
+                if (kinds is None or p.kind in kinds)
+                and p.covers(x) and prev_y >= p.surface_y(prev_x) and p.surface_y(x) > y]
         return max(hits, key=lambda p: p.surface_y(x), default=None)
 
     def find_ground(self, x, y):
