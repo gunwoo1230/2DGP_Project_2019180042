@@ -8,9 +8,11 @@ import config
 import day
 import game_framework
 import game_world
+import hazard
 from box import Box
 from dummy import Dummy
 from guard import Guard
+from hazard import LiveWindow, PigeonSpawner, Puddle
 from hud import Background, GuardMarker, Hud, Sun
 from level import Level
 from map_data import BOSS_ARENA, TEST_MAP, make_day_map, test_chunks
@@ -44,6 +46,21 @@ def spawn_tapes():
         tape = TapeItem(x, y)
         game_world.add_object(tape, game_world.LAYER_ITEM)
         game_world.add_collision_pair('box:tape', None, tape)
+
+
+def spawn_hazards():
+    # 레벨이 정한 자리에 물웅덩이·살아 있는 창문, 조각이 있는 맵이면 비둘기 부르는 것 하나
+    for i, spot in enumerate(level.hazards):
+        if spot is None:
+            continue
+        tile, left = level.tiles[i]
+        if spot[0] == 'window':
+            x, y = tile['windows'][spot[1]]
+            game_world.add_object(LiveWindow(left + x, y, box), game_world.LAYER_ITEM)
+        else:
+            game_world.add_object(Puddle(left + spot[1]), game_world.LAYER_ITEM)
+    if level.chunks:
+        game_world.add_object(PigeonSpawner(box, level), game_world.LAYER_ITEM)
 
 
 def spawn_dummy():
@@ -82,6 +99,7 @@ def restart(kind=None, same_seed=False):
     level.load(*new_map(kind, same_seed))
     camera.init(level.right)
     spawn_tapes()
+    spawn_hazards()
     spawn_dummy()
     guard.reset()
     game_world.add_object(guard, game_world.LAYER_ITEM)
@@ -118,6 +136,7 @@ def init():
     game_world.add_collision_pair('box:tape', box, None)
     game_world.add_collision_pair('box:dummy', box, None)
     spawn_tapes()
+    spawn_hazards()
     spawn_dummy()
     # 경비원은 한 번 만들고 리셋 때 처음 위치로
     guard = Guard()
@@ -195,6 +214,8 @@ def handle_events():
             warp(level.tiles[-2][1])    # 마지막 칸 앞 (낮 끝 시험용)
         elif event.type == SDL_KEYDOWN and event.key == SDLK_g:
             guard.enabled = not guard.enabled   # 끄면 멈추고 잡힘·게이지 없음 (맵 시험용)
+        elif event.type == SDL_KEYDOWN and event.key == SDLK_h:
+            hazard.enabled = not hazard.enabled     # 끄면 감속·창문·비둘기·피격 없음 (맵 시험용)
         elif event.type == SDL_KEYDOWN and event.key == SDLK_m:
             restart('test' if map_kind == 'day' else 'day', same_seed=True)
         elif event.type == SDL_KEYDOWN and event.key in DROP_KEYS:

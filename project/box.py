@@ -7,6 +7,7 @@ import camera
 import config
 import game_framework
 import game_world
+import hazard
 from sprite_data import BOX_ANIM, draw_box, draw_item
 from state_machine import StateMachine
 from tape import TapePickupFx
@@ -501,8 +502,8 @@ class Box:
         self.state_machine.reset(Caught)
 
     def hit(self):
-        # 방해 요소에 맞음 (추격 구간에서, 이미 맞았거나 기절·잡힘·무적 중이 아니고, 도로에 서 있지 않을 때)
-        if self.zone != 'chase' or self.invincible > 0 or self.state_machine.cur in (Hit, Recover, Caught):
+        # 방해 요소에 맞음 (방해 요소가 켜진 추격 구간에서, 이미 맞았거나 기절·잡힘·무적 중이 아니고, 도로에 서 있지 않을 때)
+        if not hazard.enabled or self.zone != 'chase' or self.invincible > 0                 or self.state_machine.cur in (Hit, Recover, Caught):
             return
         if self.state_machine.cur in GROUND_STATES and self.ground and self.ground.kind == 'road':
             return
