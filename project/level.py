@@ -7,13 +7,14 @@ from tiles import Platform, build_tile, draw_slope, draw_tile, images, load_imag
 
 
 class Level:
-    def __init__(self, tile_names, rng):
+    def __init__(self, tile_names, chunks, rng):
         load_images()
-        self.load(tile_names, rng)
+        self.load(tile_names, chunks, rng)
 
-    def load(self, tile_names, rng):
+    def load(self, tile_names, chunks, rng):
         # 레벨 교체 (박스가 이 객체를 들고 있으므로 내용만 바꿈), 난수로 타일마다 양식·창문을 정함
         self.names = tile_names
+        self.chunks = chunks    # 조각 범위 (첫 타일 번호, 마지막 타일 번호)
         # (만든 타일, 왼쪽 끝 월드 x)
         self.tiles = [(build_tile(name, rng), config.MAP_LEFT + config.TILE_W * i)
                       for i, name in enumerate(tile_names)]
@@ -37,6 +38,12 @@ class Level:
                 lines.append(Platform('line', prev_left + px + config.WINDOW_W, py, left + nx, ny))
                 self.remove_line_pegs(tile)
         return lines
+
+    def place_hazards(self, rng):
+        pass
+
+    def place_tapes(self, rng):
+        pass
 
     @staticmethod
     def remove_line_pegs(tile):

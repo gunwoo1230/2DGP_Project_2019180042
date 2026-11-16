@@ -13,7 +13,7 @@ from dummy import Dummy
 from guard import Guard
 from hud import Background, GuardMarker, Hud, Sun
 from level import Level
-from map_data import BOSS_ARENA, TEST_MAP, make_day_map
+from map_data import BOSS_ARENA, TEST_MAP, make_day_map, test_chunks
 from tape import TapeItem
 
 # 디버그: 지금 x에서 이 높이로 옮겨 떨어뜨림
@@ -57,7 +57,7 @@ def new_seed():
 
 
 def new_map(kind, same_seed=False):
-    # 맵 종류('day' 낮 맵 / 'test' 시험 맵)에 맞는 타일 목록과, 이어서 양식·창문·빨랫줄을 정할 난수
+    # 맵 종류('day' 낮 맵 / 'test' 시험 맵)에 맞는 타일 목록·조각 범위와, 이어서 양식·창문·빨랫줄을 정할 난수
     # 같은 시드면 같은 맵 (버그 재현용)
     global map_kind, seed
     map_kind = kind
@@ -65,8 +65,11 @@ def new_map(kind, same_seed=False):
         seed = new_seed()
     print(f'seed = {seed}')
     rng = random.Random(seed)
-    names = make_day_map(rng) if kind == 'day' else TEST_MAP
-    return names, rng
+    if kind == 'day':
+        names, chunks = make_day_map(rng)
+    else:
+        names, chunks = TEST_MAP, test_chunks(TEST_MAP)
+    return names, chunks, rng
 
 
 def restart(kind=None, same_seed=False):
@@ -92,7 +95,7 @@ def to_boss():
     # 날아가는 중인 테이프 연출은 생명 칸에 들어가야 하므로 FX 레이어는 지우지 않음
     day.phase = 'boss'
     apply_zone()
-    level.load(BOSS_ARENA, None)     # 빈터는 난수를 쓰지 않음
+    level.load(BOSS_ARENA, [], None)     # 빈터는 조각·난수를 쓰지 않음
     camera.init(level.right)
     game_world.remove_layer(game_world.LAYER_ITEM)     # 바닥 테이프·경비원
     spawn_dummy()
