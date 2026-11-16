@@ -15,7 +15,8 @@ CAMERA_BACK_X = 400                     # 박스가 이 화면 x보다 왼쪽이
 DRAW_MARGIN = 100                       # 화면 밖 이만큼까지는 그림
 FOOT_HALF = 20                          # 발 폭의 절반 (발판 위에 서 있는지 판정)
 SNAP = 8                                # 발밑 발판에 붙는 허용 오차(px)
-FLOOR_YS = (ROAD_Y, LEDGE_Y, ROOF_Y)    # 층 최소 높이
+LEDGE_FLOOR_Y = 375                     # 창틀 층 최소 높이 (창틀이 380 ~ 405, 390은 디버그 키 2에만 씀)
+FLOOR_YS = (ROAD_Y, LEDGE_FLOOR_Y, ROOF_Y)  # 층 최소 높이
 MINUTES_PER_TILE = 10                   # 건물 1칸 = 10분
 SUN_LEFT_X, SUN_RIGHT_X, SUN_Y = 80, 1520, 770     # 해 일직선 길 (화면 좌표, 플레이 칸 맨 위)
 SUN_SCALE = 0.7                         # 해 그리기 배율
