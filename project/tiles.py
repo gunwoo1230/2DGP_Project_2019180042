@@ -14,21 +14,28 @@ def basic_ledges():
     return [('ledge', a, LEDGE_Y, a + 120, LEDGE_Y) for a in (60, 240, 420)]
 
 
+# 건물 양식 후보 (그림만 바뀜, 발판은 같음)
+WIDE_STYLES = ('wide_a', 'wide_b')
+NARROW_STYLES = ('narrow_a', 'narrow_b')
+ACCEL_STYLES = ('accel_a', 'accel_b')
+STYLES = WIDE_STYLES + NARROW_STYLES + ACCEL_STYLES
+
 TILES = {
-    # 'walls': 벽(건물 몸통) x 범위, 'deco': 밟지 않는 장식(배수관·전봇대) 사각형, 'platforms': 발판 선분 (타일 안 좌표)
-    'start': {'walls': [], 'deco': [], 'platforms': []},
-    'basic': {'walls': [(40, 560)], 'deco': [],
+    # 'walls': 벽(건물 몸통) x 범위, 'styles': 양식 후보, 'deco': 밟지 않는 장식(배수관·전봇대) 사각형,
+    # 'platforms': 발판 선분 (타일 안 좌표)
+    'start': {'walls': [], 'styles': (), 'deco': [], 'platforms': []},
+    'basic': {'walls': [(40, 560)], 'styles': WIDE_STYLES, 'deco': [],
               'platforms': [('roof', 40, ROOF_Y, 560, ROOF_Y)] + basic_ledges()},
-    'pipe':  {'walls': [(40, 560)], 'deco': [('pipe', 82, ROAD_Y, 98, ROOF_Y)],
+    'pipe':  {'walls': [(40, 560)], 'styles': WIDE_STYLES, 'deco': [('pipe', 82, ROAD_Y, 98, ROOF_Y)],
               'platforms': [('roof', 40, ROOF_Y, 560, ROOF_Y)] + basic_ledges()
                            + [('peg', 60, y, 120, y) for y in PEGS_Y]},
-    'pole':  {'walls': [(200, 560)], 'deco': [('pole', 92, ROAD_Y, 108, 600)],
+    'pole':  {'walls': [(200, 560)], 'styles': NARROW_STYLES, 'deco': [('pole', 92, ROAD_Y, 108, 600)],
               'platforms': [('roof', 200, ROOF_Y, 560, ROOF_Y),
                             ('ledge', 220, LEDGE_Y, 340, LEDGE_Y), ('ledge', 420, LEDGE_Y, 540, LEDGE_Y)]
                            + [('peg', 70, y, 130, y) for y in (270, 330, 390, 450, 510)]},
-    'accel': {'walls': [(40, 560)], 'deco': [],
+    'accel': {'walls': [(40, 560)], 'styles': ACCEL_STYLES, 'deco': [],
               'platforms': [('accel', 40, 630, 560, ROOF_Y)] + basic_ledges()},
-    'gap':   {'walls': [(240, 560)], 'deco': [],
+    'gap':   {'walls': [(240, 560)], 'styles': NARROW_STYLES, 'deco': [],
               'platforms': [('roof', 240, ROOF_Y, 560, ROOF_Y),
                             ('ledge', 260, LEDGE_Y, 380, LEDGE_Y), ('ledge', 440, LEDGE_Y, 540, LEDGE_Y)]},
 }
@@ -59,7 +66,8 @@ def load_images():
     # 리셋·재시작해도 한 번만 불러옴
     if not images:
         images['road'] = load_image('resource/placeholder/ph_ground.png')
-        images['wall'] = load_image('resource/placeholder/ph_wall.png')
+        for style in STYLES:
+            images['wall_' + style] = load_image(f'resource/placeholder/ph_wall_{style}.png')
         images['deco'] = load_image('resource/placeholder/ph_pipe.png')
         images['roof'] = load_image('resource/placeholder/ph_roof.png')
         images['ledge'] = load_image('resource/placeholder/ph_ledge.png')
@@ -83,7 +91,8 @@ def draw_slope(image, x0, y0, x1, y1, thick):
 def build_tile(name, rng):
     # 타일 하나를 만듦: 그릴 것과 발판 (타일 안 좌표), 난수는 양식·창문에 씀
     tile_def = TILES[name]
-    return {'name': name, 'style': None,
+    style = rng.choice(tile_def['styles']) if tile_def['walls'] else None
+    return {'name': name, 'style': style,
             'walls': list(tile_def['walls']),
             'windows': [],      # 창문 그림 사각형
             'pegs': [],         # 받침·못 하나씩
@@ -111,7 +120,7 @@ def draw_tile(tile, left):
     screen_left = camera.to_screen(left)
     draw_rect(images['road'], screen_left, config.PLAY_BOTTOM, screen_left + TILE_W, ROAD_Y)
     for x0, x1 in tile['walls']:
-        draw_rect(images['wall'], screen_left + x0, ROAD_Y, screen_left + x1, ROOF_Y)
+        draw_rect(images['wall_' + tile['style']], screen_left + x0, ROAD_Y, screen_left + x1, ROOF_Y)
     for _, x0, y0, x1, y1 in tile['deco']:
         draw_rect(images['deco'], screen_left + x0, y0, screen_left + x1, y1)
     for kind, x0, y0, x1, y1 in tile['platforms']:
