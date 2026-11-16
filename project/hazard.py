@@ -1,10 +1,14 @@
 # 방해 요소: 물웅덩이(도로), 살아 있는 창문(창틀), 비둘기(지붕)
+import random
+
 from pico2d import load_image
 
 import camera
 import config
 import day
 import game_framework
+import game_world
+from map_data import difficulty
 
 images = {}
 enabled = True      # 디버그 H로 끄면 감속·창문 열림·비둘기·피격이 모두 없음
@@ -16,6 +20,8 @@ def load_images():
         images['puddle'] = load_image('resource/placeholder/ph_puddle.png')
         images['window_lit'] = load_image('resource/placeholder/ph_window_lit.png')
         images['window_open'] = load_image('resource/placeholder/ph_window_open.png')
+        images['pigeon'] = load_image('resource/placeholder/ph_pigeon.png')
+        images['alert'] = load_image('resource/placeholder/ph_alert.png')
 
 
 def draw_rect(image, x0, y0, x1, y1):
@@ -96,12 +102,42 @@ class LiveWindow:
 
 class PigeonSpawner:
     # 박스가 평평한 지붕에 있는 시간이 쌓이면 확률로 비둘기를 부름 (한 번에 하나)
+    # 맵 배치 난수가 아니라 random 모듈을 씀 (같은 시드여도 비둘기 시점은 다를 수 있음)
     def __init__(self, box, level):
+        load_images()
         self.box = box
         self.level = level
+        self.pigeon = None      # 지금 공격 중인 비둘기
+        self.new_wait()
+
+    def new_wait(self):
+        self.time = 0.0
+        self.wait = random.uniform(*config.PIGEON_CHECK_TIME)
 
     def update(self):
-        pass
+        # 공격 중이 아니고, 첫 건물 몇 채를 지나 평평한 지붕(roof)에 서 있는 시간만 쌓음
+        if not enabled or day.phase != 'chase' or self.pigeon is not None:
+            return
+        tile_i = self.level.tile_index(self.box.x)
+        if self.box.standing_kind() != 'roof' or tile_i <= config.HAZARD_FREE:
+            return
+        self.time += game_framework.frame_time
+        if self.time >= self.wait:
+            if random.random() < config.HAZARD_CHANCE[difficulty(tile_i - 1)]:
+                self.start_attack()
+            self.new_wait()
+
+    def start_attack(self):
+        # 박스 앞 지붕 높이에 앉음 (화면 오른쪽 밖으로 나가지 않게)
+        screen_right = camera.x + config.SCREEN_W - config.PIGEON_SIT_MARGIN
+        x = min(self.box.x + config.PIGEON_SIT_DX, screen_right)
+        perched = any(p.kind in ('roof', 'accel') and p.x0 <= x <= p.x1 for p in self.level.platforms)
+        self.pigeon = Pigeon(x, perched, self)
+        game_world.add_object(self.pigeon, game_world.LAYER_ITEM)
+
+    def attack_done(self):
+        self.pigeon = None
+        self.new_wait()
 
     def draw(self):
         pass
@@ -116,15 +152,33 @@ class PigeonSpawner:
 class Pigeon:
     # 박스 앞 지붕에 앉아 "!" -> 왼쪽으로 낮게 돌진
     def __init__(self, x, perched, spawner):
-        self.x = x
+        load_images()
+        self.x = x                  # 가운데 월드 x
+        self.y = config.ROOF_Y + config.PIGEON_H / 2    # 가운데, 앉으면 아래 끝이 지붕 높이
         self.perched = perched      # 앉은 자리 아래에 지붕이 있는지 (없으면 떠 있음, 진짜 그림에서 씀)
         self.spawner = spawner
+        self.state = 'sit'          # 'sit' 앉아서 "!"
+        self.time = 0.0
 
     def update(self):
-        pass
+        self.time += game_framework.frame_time
+        if self.state == 'sit' and self.time >= config.PIGEON_ALERT_TIME:
+            self.finish()
+
+    def finish(self):
+        game_world.remove_object(self)
+        self.spawner.attack_done()
 
     def draw(self):
-        pass
+        if not camera.visible(self.x):
+            return
+        hw, hh = config.PIGEON_W / 2, config.PIGEON_H / 2
+        draw_rect(images['pigeon'], self.x - hw, self.y - hh, self.x + hw, self.y + hh)
+        if self.state == 'sit':
+            # 머리 위 "!"
+            bottom = self.y + hh + config.ALERT_GAP
+            draw_rect(images['alert'], self.x - config.ALERT_W / 2, bottom, self.x + config.ALERT_W / 2,
+                      bottom + config.ALERT_H)
 
     def get_bb(self):
         pass

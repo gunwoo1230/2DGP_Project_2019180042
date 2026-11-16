@@ -47,7 +47,12 @@ PUDDLE_EDGE = 20                        # 물웅덩이를 타일 양쪽 끝에�
 PUDDLE_RISE = 6                         # 물웅덩이가 도로 윗면 위로 올라오는 높이 (나머지는 아래로)
 PUDDLE_SLOW, PUDDLE_AFTER = 0.7, 0.5    # 물웅덩이 속도 배율, 나온 뒤 느림이 남는 시간 (초)
 PUDDLE_FLASH = 0.2                      # 물웅덩이에 들어가는 순간 피격 그림을 보여 주는 시간 (초)
-PUDDLE_CLIMB_GAP = 80                   # 물웅덩이를 배수관 받침·전봇대 못 x 범위에서 이만큼 떨어뜨림
+PUDDLE_CLIMB_GAP = 80
+PIGEON_CHECK_TIME = (4, 8)              # 평평한 지붕에 이만큼 있으면 비둘기를 한 번 굴림 (초, 매번 새로 고름)
+PIGEON_SIT_DX, PIGEON_SIT_MARGIN = 500, 60  # 비둘기 앉는 자리: 박스 x + 500, 화면 오른쪽 끝에서 60 안쪽까지
+PIGEON_ALERT_TIME = 0.8                 # 앉아서 "!"를 띄우는 시간 (초)
+PIGEON_W, PIGEON_H = 70, 50             # 비둘기 크기 (충돌 박스도 같음)
+ALERT_W, ALERT_H, ALERT_GAP = 24, 44, 10    # "!" 크기, 비둘기 머리와의 간격                   # 물웅덩이를 배수관 받침·전봇대 못 x 범위에서 이만큼 떨어뜨림
 PLATFORM_THICK = {'roof': 20, 'ledge': 12, 'peg': 10, 'accel': 20, 'line': 4}  # 임시 그림 두께
 
 # 박스 이동
