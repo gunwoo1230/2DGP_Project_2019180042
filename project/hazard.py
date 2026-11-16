@@ -87,7 +87,8 @@ class LiveWindow:
             draw_rect(images['window_open'], x1, y0, x1 + config.WINDOW_DOOR_W, y1)
 
     def get_bb(self):
-        pass
+        # 열린 문짝까지 포함한 창문 범위 (열려 있을 때만 박스를 맞춤)
+        return self.x - config.WINDOW_DOOR_W, self.y, self.x + config.WINDOW_W + config.WINDOW_DOOR_W,             self.y + config.WINDOW_H
 
     def handle_collision(self, group, other):
         pass

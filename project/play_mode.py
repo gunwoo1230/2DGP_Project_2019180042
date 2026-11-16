@@ -56,7 +56,9 @@ def spawn_hazards():
         tile, left = level.tiles[i]
         if spot[0] == 'window':
             x, y = tile['windows'][spot[1]]
-            game_world.add_object(LiveWindow(left + x, y, box), game_world.LAYER_ITEM)
+            window = LiveWindow(left + x, y, box)
+            game_world.add_object(window, game_world.LAYER_ITEM)
+            game_world.add_collision_pair('box:window', None, window)
         else:
             puddle = Puddle(left + spot[1])
             game_world.add_object(puddle, game_world.LAYER_ITEM)
@@ -138,6 +140,7 @@ def init():
     game_world.add_collision_pair('box:tape', box, None)
     game_world.add_collision_pair('box:dummy', box, None)
     game_world.add_collision_pair('box:puddle', box, None)
+    game_world.add_collision_pair('box:window', box, None)
     spawn_tapes()
     spawn_hazards()
     spawn_dummy()

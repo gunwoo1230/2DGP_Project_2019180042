@@ -698,6 +698,9 @@ class Box:
             left, _, right, _ = other.get_bb()
             if self.state_machine.cur in GROUND_STATES and self.ground and self.ground.kind == 'road'                     and self.x + config.FOOT_HALF >= left and self.x - config.FOOT_HALF <= right:
                 self.puddle_touch = True
+        elif group == 'box:window':
+            if other.state == 'open':
+                self.hit()
         elif group == 'box:dummy':
             if self.state_machine.cur is Slam and not self.slam_returning:
                 other.on_hit()
