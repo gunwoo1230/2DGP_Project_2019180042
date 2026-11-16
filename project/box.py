@@ -267,7 +267,10 @@ class Recover:
 
     @staticmethod
     def exit(box, event):
-        pass
+        # 피격으로 기절했으면 끝난 뒤 잠깐 무적
+        if box.from_hit:
+            box.from_hit = False
+            box.invincible = config.HIT_INVINCIBLE
 
     @staticmethod
     def do(box):
@@ -374,6 +377,7 @@ class Hit:
         box.frame = 0
         box.hit_time = 0.0
         box.takeoff_y = box.y       # 맞은 높이에서 떨어진 만큼 기절
+        box.from_hit = True         # 기절이 끝나면 무적
         box.vx = -box.face_dir * config.HIT_KNOCK_VX
         box.vy = config.HIT_KNOCK_VY
         box.ground = None
@@ -441,6 +445,8 @@ class Box:
         self.near_tape = None   # 지금 겹쳐 있는 테이프
         self.slam_cooldown = 0.0
         self.on_accel_ground = False    # 가속 지붕·빨랫줄 위 여부
+        self.invincible = 0.0   # 남은 무적 시간 (피격 기절 뒤)
+        self.from_hit = False   # 지금 기절이 피격에서 온 것인지
         self.clear_input()
         self.state_machine = StateMachine(self, Idle, {
             Idle: [(is_air, Jump), (space_down, Charge), (space_ready, Charge), (can_pick_tape, Get), (can_slam, Slam),
@@ -466,8 +472,13 @@ class Box:
         self.face_dir = self.dir if self.dir != 0 else 1
         self.near_tape = None
         self.slam_cooldown = 0.0
+        self.clear_hit()
         self.clear_input()
         self.state_machine.reset(Walk if self.dir != 0 else Idle)
+
+    def clear_hit(self):
+        self.invincible = 0.0
+        self.from_hit = False
 
     def clear_input(self):
         # 미리 누른 키 기억 (Space는 누르고 있는지와 방금 눌렀는지를 따로)
@@ -481,15 +492,17 @@ class Box:
         self.x, self.y = x, config.ROAD_Y
         self.vx, self.vy = 0.0, 0.0
         self.on_accel_ground = False
+        self.clear_hit()
         self.state_machine.reset(Walk if self.dir != 0 else Idle)
 
     def catch(self):
         # 어느 상태에서든 바로 잡힘 (회복 중 도는 별은 스스로 지워짐)
+        self.clear_hit()
         self.state_machine.reset(Caught)
 
     def hit(self):
-        # 방해 요소에 맞음 (추격 구간에서, 이미 맞았거나 기절·잡힘 중이 아니고, 도로에 서 있지 않을 때)
-        if self.zone != 'chase' or self.state_machine.cur in (Hit, Recover, Caught):
+        # 방해 요소에 맞음 (추격 구간에서, 이미 맞았거나 기절·잡힘·무적 중이 아니고, 도로에 서 있지 않을 때)
+        if self.zone != 'chase' or self.invincible > 0 or self.state_machine.cur in (Hit, Recover, Caught):
             return
         if self.state_machine.cur in GROUND_STATES and self.ground and self.ground.kind == 'road':
             return
@@ -503,6 +516,7 @@ class Box:
 
     def update(self):
         self.slam_cooldown = max(self.slam_cooldown - game_framework.frame_time, 0)
+        self.invincible = max(self.invincible - game_framework.frame_time, 0)
         self.state_machine.update()
         if self.state_machine.cur in GROUND_STATES:
             self.check_ground()
@@ -561,6 +575,9 @@ class Box:
             self.state_machine.handle_event(('AIR', None))
 
     def draw(self):
+        # 무적 중에는 HIT_BLINK마다 숨김
+        if self.invincible > 0 and int(self.invincible / config.HIT_BLINK) % 2 == 1:
+            return
         self.state_machine.draw()
 
     def get_bb(self):

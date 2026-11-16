@@ -66,6 +66,7 @@ STUN_PX_PER_SEC = 180                   # 떨어진 높이 180px당 1초 멈춤
 DIZZY_FPS, DIZZY_GAP = 6, 18            # 도는 별 속도, 머리 위 간격(px)
 HIT_POSE_TIME = 0.25                    # 피격 그림을 보여 주는 시간 (초), 그 뒤 fall 그림
 HIT_KNOCK_VX, HIT_KNOCK_VY = 120, 200   # 피격 때 뒤로 밀리는 가로 속도, 살짝 튀는 세로 속도 (px/s)
+HIT_INVINCIBLE, HIT_BLINK = 0.5, 0.1    # 피격 기절이 끝난 뒤 무적 시간, 그동안 깜빡이는 간격 (초)
 INPUT_BUFFER_TIME = 0.15                # 미리 누른 키를 기억하는 시간 (초)
 
 # 테이프
