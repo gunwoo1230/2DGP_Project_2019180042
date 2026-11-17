@@ -2,14 +2,16 @@
 import random
 ROAD, LEDGE_MIN, ROOF, TILE_W = 210, 375, 570, 600
 WIN_W, WIN_GAP, WIN_YS = 90, 50, (380, 385, 390, 395, 400, 405)
-PIPE_W, PIPE_PEG_W, PIPE_PEGS = 16, 60, (300, 390, 480)
+PIPE_W, PIPE_OVERLAP, PIPE_PEG_W, PIPE_PEGS = 28, 2, 51, (300, 390, 480)    # 11/17 진짜 그림 폭 (배수관 28, 받침 51)
 POLE_PEGS = (300, 390, 480, 570)
+POLE_PEG_X = {'R': (97, 154), 'L': (46, 103)}     # 11/17 못 그림 폭 57, 높이마다 오른쪽·왼쪽 번갈아
+POLE_PEG_SIDES = ('R', 'L', 'R', 'L')
 WIDE_STYLES, NARROW_STYLES, ACCEL_STYLES = ('wide_a', 'wide_b'), ('narrow_a', 'narrow_b'), ('accel_a', 'accel_b')
 TILES = {
  'start': dict(wall=None),
  'basic': dict(wall=(40, 560), roof=('roof', 40, ROOF, 560, ROOF), zone=(60, 540), windows=3, styles=WIDE_STYLES),
  'pipe':  dict(wall=(40, 560), roof=('roof', 40, ROOF, 560, ROOF), zone=(60, 540), windows=3, styles=WIDE_STYLES, pipe=True),
- 'accel': dict(wall=(40, 560), roof=('accel', 40, 630, 560, ROOF), zone=(60, 540), windows=3, styles=ACCEL_STYLES),
+ 'accel': dict(wall=(40, 560), roof=('accel', 40, 618, 560, ROOF), zone=(60, 540), windows=3, styles=ACCEL_STYLES),
  'gap':   dict(wall=(240, 560), roof=('roof', 240, ROOF, 560, ROOF), zone=(260, 540), windows=2, styles=NARROW_STYLES),
  'pole':  dict(wall=(200, 560), roof=('roof', 200, ROOF, 560, ROOF), zone=(220, 540), windows=2, styles=NARROW_STYLES, pole=True),
 }
@@ -49,11 +51,12 @@ def build(name, rng):
             plats.append(('ledge', x, y, x + WIN_W, y)); wins.append((x, y))
         w0 = t['wall'][0]
         if t.get('pipe'):
-            deco.append(('pipe', w0 - PIPE_W, ROAD, w0, ROOF))
-            plats += [('peg', w0 - PIPE_PEG_W, y, w0, y) for y in PIPE_PEGS]
+            pc = w0 + PIPE_OVERLAP - PIPE_W / 2     # 배수관 가운데 = 받침 가운데
+            deco.append(('pipe', w0 + PIPE_OVERLAP - PIPE_W, ROAD, w0 + PIPE_OVERLAP, 580))
+            plats += [('peg', pc - PIPE_PEG_W / 2, y, pc + PIPE_PEG_W / 2, y) for y in PIPE_PEGS]
         if t.get('pole'):
-            deco.append(('pole', 92, ROAD, 108, 630))
-            plats += [('peg', 70, y, 130, y) for y in POLE_PEGS]
+            deco.append(('pole', 83, ROAD, 117, 658))
+            plats += [('peg', POLE_PEG_X[s][0], y, POLE_PEG_X[s][1], y) for y, s in zip(POLE_PEGS, POLE_PEG_SIDES)]
     return dict(name=name, wall=t['wall'], style=style, plats=plats, deco=deco, wins=wins)
 
 LINE_RATE = 1.5

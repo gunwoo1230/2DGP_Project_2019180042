@@ -5,6 +5,7 @@ from pico2d import load_image
 
 import camera
 import config
+import parts
 from config import ROAD_Y, ROOF_Y, TILE_W
 
 # 건물 양식 후보 (그림만 바뀜, 발판은 같음)
@@ -13,21 +14,37 @@ NARROW_STYLES = ('narrow_a', 'narrow_b')
 ACCEL_STYLES = ('accel_a', 'accel_b')
 STYLES = WIDE_STYLES + NARROW_STYLES + ACCEL_STYLES
 
+# 양식 -> 건물 그림 (b 양식 그림이 오면 여기만 고침)
+STYLE_PARTS = {'wide_a': 'building_wide_a', 'wide_b': 'building_wide_a',
+               'narrow_a': 'building_narrow_a', 'narrow_b': 'building_narrow_a',
+               'accel_a': 'building_accel_a', 'accel_b': 'building_accel_a'}
+
+
+def roof_top_row(part):
+    # 그림에서 지붕 높이(570) 줄: 평평한 지붕은 roof_top_row, 가속 지붕은 오른쪽 끝(낮은 쪽)
+    info = parts.INFO[part]
+    return info['roof_top_row'] if 'roof_top_row' in info else info['roof_right_top_row']
+
+
+# 가속 지붕 왼쪽 높이: 그림의 왼쪽·오른쪽 지붕 줄 차이만큼 570보다 높음 (618)
+_accel = parts.INFO[STYLE_PARTS['accel_a']]
+ACCEL_LEFT_Y = ROOF_Y + _accel['roof_right_top_row'] - _accel['roof_left_top_row']
+
 TILES = {
     # 'walls': 벽(건물 몸통) x 범위, 'styles': 양식 후보, 'roof': 지붕 발판 선분,
-    # 'zone': 창문 구역 x 범위, 'windows': 창문 수, 'deco': 밟지 않는 장식(배수관·전봇대) 사각형,
-    # 'pegs': 받침·못 (x0, y, x1), 'pipe': 왼쪽 벽 배수관, 'pole': 왼쪽 빈터 전봇대 (타일 안 좌표)
-    'start': {'walls': [], 'styles': (), 'roof': None, 'zone': None, 'windows': 0, 'deco': [], 'pegs': []},
+    # 'zone': 창문 구역 x 범위, 'windows': 창문 수,
+    # 'pipe': 왼쪽 벽 배수관, 'pole': 왼쪽 빈터 전봇대 (타일 안 좌표)
+    'start': {'walls': [], 'styles': (), 'roof': None, 'zone': None, 'windows': 0},
     'basic': {'walls': [(40, 560)], 'styles': WIDE_STYLES, 'roof': ('roof', 40, ROOF_Y, 560, ROOF_Y),
-              'zone': (60, 540), 'windows': 3, 'deco': [], 'pegs': []},
+              'zone': (60, 540), 'windows': 3},
     'pipe':  {'walls': [(40, 560)], 'styles': WIDE_STYLES, 'roof': ('roof', 40, ROOF_Y, 560, ROOF_Y),
-              'zone': (60, 540), 'windows': 3, 'deco': [], 'pegs': [], 'pipe': True},
-    'accel': {'walls': [(40, 560)], 'styles': ACCEL_STYLES, 'roof': ('accel', 40, 630, 560, ROOF_Y),
-              'zone': (60, 540), 'windows': 3, 'deco': [], 'pegs': []},
+              'zone': (60, 540), 'windows': 3, 'pipe': True},
+    'accel': {'walls': [(40, 560)], 'styles': ACCEL_STYLES, 'roof': ('accel', 40, ACCEL_LEFT_Y, 560, ROOF_Y),
+              'zone': (60, 540), 'windows': 3},
     'gap':   {'walls': [(240, 560)], 'styles': NARROW_STYLES, 'roof': ('roof', 240, ROOF_Y, 560, ROOF_Y),
-              'zone': (260, 540), 'windows': 2, 'deco': [], 'pegs': []},
+              'zone': (260, 540), 'windows': 2},
     'pole':  {'walls': [(200, 560)], 'styles': NARROW_STYLES, 'roof': ('roof', 200, ROOF_Y, 560, ROOF_Y),
-              'zone': (220, 540), 'windows': 2, 'deco': [], 'pegs': [], 'pole': True},
+              'zone': (220, 540), 'windows': 2, 'pole': True},
 }
 
 images = {}
@@ -50,17 +67,9 @@ class Platform:
 
 
 def load_images():
-    # 리셋·재시작해도 한 번만 불러옴
+    # 리셋·재시작해도 한 번만 불러옴 (건물·창문 등 진짜 그림은 parts가 처음 그릴 때 불러옴)
     if not images:
         images['road'] = load_image('resource/placeholder/ph_ground.png')
-        for style in STYLES:
-            images['wall_' + style] = load_image(f'resource/placeholder/ph_wall_{style}.png')
-        images['window'] = load_image('resource/placeholder/ph_window.png')
-        images['deco'] = load_image('resource/placeholder/ph_pipe.png')
-        images['roof'] = load_image('resource/placeholder/ph_roof.png')
-        images['ledge'] = load_image('resource/placeholder/ph_ledge.png')
-        images['peg'] = load_image('resource/placeholder/ph_peg.png')
-        images['accel'] = load_image('resource/placeholder/ph_accel.png')
         images['line'] = load_image('resource/placeholder/ph_rope.png')
 
 
@@ -83,15 +92,15 @@ def build_tile(name, rng):
     tile = {'name': name, 'style': None, 'roof': tile_def['roof'],
             'walls': list(tile_def['walls']),
             'windows': [],      # 창문 (왼쪽 끝 x, 창틀 y)
-            'pegs': list(tile_def['pegs']),     # 받침·못 하나씩
-            'deco': list(tile_def['deco'])}
+            'pegs': [],         # 받침·못 (x0, y, x1, 그림, 좌우 뒤집기)
+            'deco': []}         # 밟지 않는 배수관·전봇대 (그림, 왼쪽 x, 윗변 y)
     if tile_def['walls']:
         tile['style'] = rng.choice(tile_def['styles'])
         tile['windows'] = make_windows(tile_def, rng)
     if tile_def.get('pipe'):
-        add_pipe(tile)
+        add_parts(tile, *pipe_parts(tile_def['walls'][0][0]))
     if tile_def.get('pole'):
-        add_pole(tile)
+        add_parts(tile, *pole_parts())
     make_platforms(tile)
     return tile
 
@@ -118,51 +127,73 @@ def make_platforms(tile):
     if tile['roof']:
         platforms.append(tile['roof'])
     platforms += [('ledge', x, y, x + config.WINDOW_W, y) for x, y in tile['windows']]
-    platforms += [('peg', x0, y, x1, y) for x0, y, x1 in tile['pegs']]
+    platforms += [('peg', peg[0], peg[1], peg[2], peg[1]) for peg in tile['pegs']]
     tile['platforms'] = platforms
 
 
-def add_pipe(tile):
-    # 왼쪽 벽 바깥에 바짝 붙은 배수관, 받침은 앞 타일과의 틈 쪽으로 튀어나옴
-    w0 = tile['walls'][0][0]
-    tile['deco'].append(('pipe', w0 - config.PIPE_W, ROAD_Y, w0, ROOF_Y))
-    tile['pegs'] += [(w0 - config.PIPE_PEG_W, y, w0) for y in config.PIPE_PEGS_Y]
+def add_parts(tile, deco, pegs):
+    tile['deco'] += deco
+    tile['pegs'] += pegs
 
 
-def add_pole(tile):
-    # 왼쪽 빈터 전봇대와 못 (570 못에서 양옆 지붕으로 건너감)
-    x0, x1 = config.POLE_X
-    tile['deco'].append(('pole', x0, ROAD_Y, x1, config.POLE_TOP))
-    tile['pegs'] += [(config.POLE_PEG_X[0], y, config.POLE_PEG_X[1]) for y in config.POLE_PEGS_Y]
+def pipe_parts(w0):
+    # 왼쪽 벽(x = w0) 바깥에 붙은 배수관: 아랫변 = 도로, 오른쪽 끝 = 벽 왼쪽 + PIPE_OVERLAP
+    # 받침은 배수관 가운데에 가로 가운데를 맞추고, 발판 x 범위 = 받침 그림 x 범위
+    pipe_w, pipe_h = parts.size('pipe')
+    left = w0 + config.PIPE_OVERLAP - pipe_w
+    center = left + pipe_w / 2
+    half = parts.size('pipe_bracket')[0] / 2
+    deco = [('pipe', left, ROAD_Y + pipe_h)]
+    pegs = [(center - half, y, center + half, 'pipe_bracket', False) for y in config.PIPE_PEGS_Y]
+    return deco, pegs
+
+
+def pole_parts():
+    # 왼쪽 빈터 전봇대 (기둥 가운데 = POLE_X 가운데, 땅 = 도로), 못은 높이마다 오른쪽·왼쪽
+    # 오른쪽 못은 왼쪽 끝을, 왼쪽 못(좌우 뒤집음)은 오른쪽 끝을 기둥 가운데 너머 POLE_PEG_IN에 맞춤
+    info = parts.INFO['pole']
+    cx = sum(config.POLE_X) / 2
+    deco = [('pole', cx - info['center_x'], ROAD_Y + info['base_row'])]
+    peg_w = parts.size('pole_peg')[0]
+    pegs = []
+    for y, side in zip(config.POLE_PEGS_Y, config.POLE_PEG_SIDES):
+        if side == 'R':
+            x0 = cx - config.POLE_PEG_IN
+            pegs.append((x0, y, x0 + peg_w, 'pole_peg', False))
+        else:
+            x1 = cx + config.POLE_PEG_IN
+            pegs.append((x1 - peg_w, y, x1, 'pole_peg', True))
+    return deco, pegs
 
 
 def climb_x(name):
     # 오르는 곳(배수관 받침·전봇대 못)의 x 범위 (타일 안), 없으면 None
     tile_def = TILES[name]
     if tile_def.get('pipe'):
-        w0 = tile_def['walls'][0][0]
-        return w0 - config.PIPE_PEG_W, w0
-    if tile_def.get('pole'):
-        return config.POLE_PEG_X
-    return None
+        pegs = pipe_parts(tile_def['walls'][0][0])[1]
+    elif tile_def.get('pole'):
+        pegs = pole_parts()[1]
+    else:
+        return None
+    return min(peg[0] for peg in pegs), max(peg[2] for peg in pegs)
 
 
 def draw_tile(tile, left):
-    # 진짜 타일 그림이 오면 이 함수 안에서 교체
-    # 순서: 도로 → 벽 → 창문 → 배수관·전봇대 → 발판
+    # 순서: 도로 → 건물 → 배수관·전봇대 → 받침·못 → 창문 → 창틀 (빨랫줄은 Level이 타일 다음에)
     screen_left = camera.to_screen(left)
     draw_rect(images['road'], screen_left, config.PLAY_BOTTOM, screen_left + TILE_W, ROAD_Y)
-    for x0, x1 in tile['walls']:
-        draw_rect(images['wall_' + tile['style']], screen_left + x0, ROAD_Y, screen_left + x1, ROOF_Y)
-    inset = config.WINDOW_INSET
+    if tile['walls']:
+        # 건물 그림 한 장: 가로는 벽 x 범위에 맞춤 (그림 폭과 다르면 가로만 늘림, pole 360 <- 320)
+        # 세로는 그대로, 지붕 줄 = 570 (아랫변 줄이 도로에 옴)
+        part = STYLE_PARTS[tile['style']]
+        x0, x1 = tile['walls'][0]
+        parts.draw_top_left(part, screen_left + x0, ROOF_Y + roof_top_row(part), w=x1 - x0)
+    for part, x, top in tile['deco']:
+        parts.draw_top_left(part, screen_left + x, top)
+    for x0, y, x1, part, flip in tile['pegs']:
+        # 판 윗면 줄 = 발판 높이
+        parts.draw_top_left(part, screen_left + x0, y + parts.INFO[part]['plate_top_row'], flip)
     for x, y in tile['windows']:
-        draw_rect(images['window'], screen_left + x + inset, y, screen_left + x + config.WINDOW_W - inset,
-                  y + config.WINDOW_H)
-    for _, x0, y0, x1, y1 in tile['deco']:
-        draw_rect(images['deco'], screen_left + x0, y0, screen_left + x1, y1)
-    for kind, x0, y0, x1, y1 in tile['platforms']:
-        if kind in ('roof', 'ledge', 'peg'):
-            # 윗면이 발판 선에 오도록 두께만큼 아래로
-            draw_rect(images[kind], screen_left + x0, y0 - config.PLATFORM_THICK[kind], screen_left + x1, y0)
-        elif kind == 'accel':
-            draw_slope(images[kind], screen_left + x0, y0, screen_left + x1, y1, config.PLATFORM_THICK[kind])
+        parts.draw_window('window', screen_left + x, y)
+    for x, y in tile['windows']:
+        parts.draw_sill(screen_left + x, y)

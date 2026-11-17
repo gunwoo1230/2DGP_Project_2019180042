@@ -21,7 +21,6 @@ BOX_ANIM = {                # 이름: (행의 bottom, 프레임 수)
     'get':     (0, 3),      # 정면
 }
 BOX_TEMP_POSE = {           # 진짜 그림이 오면 BOX_ANIM에 행을 추가하고 여기서 삭제
-    'charge': ('idle', 0),  # 기모으기
     'slam':   ('jump', 0),  # 몸통박치기
 }
 

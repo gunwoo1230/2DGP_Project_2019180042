@@ -1,0 +1,135 @@
+{
+ "building_wide_a": {
+  "size": [
+   520,
+   368
+  ],
+  "roof_top_row": 4,
+  "base_row": 364,
+  "note": "가로 전체 = 지붕 발판 520 (타일 x 40~560). roof_top_row = 지붕 윗면(570), base_row = 바닥(210), 위에서 잰 픽셀 줄"
+ },
+ "building_accel_a": {
+  "size": [
+   520,
+   413
+  ],
+  "roof_left_top_row": 1,
+  "roof_right_top_row": 49,
+  "base_row": 409,
+  "note": "가속 지붕 왼쪽 높이 = 618 (오른쪽 570)"
+ },
+ "building_narrow_a": {
+  "size": [
+   320,
+   369
+  ],
+  "roof_top_row": 4,
+  "base_row": 364,
+  "note": "가로 전체 = 320 (타일 x 240~560), 원본에서 가로 12% 줄임"
+ },
+ "pole": {
+  "size": [
+   89,
+   450
+  ],
+  "center_x": 44,
+  "base_row": 448,
+  "note": "center_x = 기둥 가운데, base_row = 땅(210)"
+ },
+ "pipe": {
+  "size": [
+   28,
+   370
+  ],
+  "note": "높이 370 = 도로(210) ~ 지붕 위(580), 꺾인 끝이 오른쪽(건물 쪽). 건물 왼쪽 벽 바깥에 붙임"
+ },
+ "pipe_bracket": {
+  "size": [
+   51,
+   36
+  ],
+  "plate_top_row": 13,
+  "note": "plate_top_row = 받침 윗면(발판 선), 배수관 가운데에 가로 가운데를 맞춤"
+ },
+ "pole_peg": {
+  "size": [
+   57,
+   38
+  ],
+  "plate_top_row": 13,
+  "note": "오른쪽으로 튀어나온 못, 왼쪽 못은 좌우 뒤집어 그림"
+ },
+ "window": {
+  "size": [
+   90,
+   77
+  ],
+  "note": "창문 폭 90 (열린 창문은 문짝 포함), 아랫변을 창틀 윗면에 맞춤, 가로 가운데 = 창틀 가운데"
+ },
+ "window_lit": {
+  "size": [
+   90,
+   77
+  ],
+  "note": "창문 폭 90 (열린 창문은 문짝 포함), 아랫변을 창틀 윗면에 맞춤, 가로 가운데 = 창틀 가운데"
+ },
+ "window_open": {
+  "size": [
+   152,
+   78
+  ],
+  "note": "창문 폭 90 (열린 창문은 문짝 포함), 아랫변을 창틀 윗면에 맞춤, 가로 가운데 = 창틀 가운데"
+ },
+ "sill": {
+  "size": [
+   112,
+   44
+  ],
+  "plank_left": 9,
+  "plank_right": 99,
+  "plank_top_row": 13,
+  "note": "plank 판자 폭 90 = 창틀 발판, plank_top_row = 발판 선"
+ },
+ "puddle_1": {
+  "size": [
+   150,
+   48
+  ],
+  "note": "150 x 48, 도로 윗면(210)이 세로 가운데쯤 오게"
+ },
+ "puddle_2": {
+  "size": [
+   150,
+   48
+  ],
+  "note": "150 x 48, 도로 윗면(210)이 세로 가운데쯤 오게"
+ },
+ "pigeon_sit": {
+  "size": [
+   80,
+   71
+  ],
+  "note": "왼쪽을 봄. sit = 지붕에 앉음(아랫변 = 지붕), fly1·fly2 = 돌진 날갯짓 번갈아"
+ },
+ "pigeon_fly1": {
+  "size": [
+   95,
+   76
+  ],
+  "note": "왼쪽을 봄. sit = 지붕에 앉음(아랫변 = 지붕), fly1·fly2 = 돌진 날갯짓 번갈아"
+ },
+ "pigeon_fly2": {
+  "size": [
+   101,
+   64
+  ],
+  "note": "왼쪽을 봄. sit = 지붕에 앉음(아랫변 = 지붕), fly1·fly2 = 돌진 날갯짓 번갈아"
+ },
+ "alert": {
+  "size": [
+   56,
+   50
+  ],
+  "note": "느낌표, 비둘기 머리 위"
+ }
+}

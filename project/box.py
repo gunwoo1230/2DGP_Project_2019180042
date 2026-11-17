@@ -57,18 +57,9 @@ def space_down(box, event):
     return event[0] == 'KEY' and event[1].type == SDL_KEYDOWN and event[1].key == SDLK_SPACE
 
 
-def space_up(box, event):
-    return event[0] == 'KEY' and event[1].type == SDL_KEYUP and event[1].key == SDLK_SPACE
-
-
 def space_ready(box, event):
-    # 미리 누른 Space가 남아 있음
-    return event[0] == 'BUFFER' and box.space_waiting
-
-
-def space_tapped(box, event):
-    # 미리 누른 Space를 이미 뗐음
-    return event[0] == 'BUFFER' and not box.space_held
+    # 미리 누른 Space가 아직 기억 시간 안에 남아 있음
+    return event[0] == 'BUFFER' and box.space_buffer > 0
 
 
 def shift_down(box, event):
@@ -105,6 +96,8 @@ class Idle:
 
     @staticmethod
     def draw(box):
+        if box.draw_slowed():
+            return
         draw_box(box.sheet, 'idle', box.frame, camera.to_screen(box.x), box.y, flip=box.face_dir < 0)
 
 
@@ -137,48 +130,22 @@ class Walk:
 
     @staticmethod
     def draw(box):
-        if box.puddle_flash > 0:
-            # 물웅덩이에 막 들어감: 잠깐 피격 그림 (멈추지는 않음)
-            draw_box(box.sheet, 'hit', 0, camera.to_screen(box.x), box.y, flip=box.face_dir < 0)
+        if box.draw_slowed():
             return
         draw_box(box.sheet, 'jump', box.frame, camera.to_screen(box.x), box.y + Walk.hop_offset(box), flip=box.face_dir < 0)
-
-
-class Charge:
-    @staticmethod
-    def enter(box, event):
-        box.charge_time = 0.0
-        box.space_waiting = False   # 누른 Space를 처리함
-
-    @staticmethod
-    def exit(box, event):
-        pass
-
-    @staticmethod
-    def do(box):
-        dt = game_framework.frame_time
-        box.charge_time += dt
-        box.vx = box.dir * box.charge_speed()
-        box.x += box.vx * dt
-        box.clamp_x()
-
-    @staticmethod
-    def draw(box):
-        c = box.charge_ratio()
-        draw_box(box.sheet, 'charge', 0, camera.to_screen(box.x), box.y, flip=box.face_dir < 0,
-                 sx=1 + config.CHARGE_SQUASH_X * c, sy=1 - config.CHARGE_SQUASH_Y * c)
 
 
 class Jump:
     @staticmethod
     def enter(box, event):
         if event and event[0] in ('KEY', 'BUFFER'):
-            height = config.JUMP_MIN_H + (config.JUMP_MAX_H - config.JUMP_MIN_H) * box.charge_ratio()
-            box.vy = math.sqrt(2 * config.GRAVITY * height)
-            box.vx = box.dir * box.charge_speed()   # 시작 가로 속도 = 그때의 이동 속도
+            # Space: 높이 고정 점프, 시작 가로 속도 = 그때의 걷기 속도 (가속 지붕·빨랫줄이면 가속 속도)
+            box.space_buffer = 0.0      # 누른 Space를 처리함
+            box.vy = math.sqrt(2 * config.GRAVITY * config.JUMP_H)
+            box.vx = box.dir * box.walk_speed()
         else:
             box.vy = 0      # 발판에서 벗어남: 위로 뛰지 않고 가로 속도 유지
-        box.jump_vy = box.vy    # 점프 시작 속도 (높이가 달라도 같은 비율로 그림을 넘기는 기준)
+        box.jump_vy = box.vy    # 점프 시작 속도 (그림을 넘기는 기준)
         box.ground = None
         box.on_accel_ground = False
         # 출발 높이가 속한 층이 시작 층
@@ -459,7 +426,7 @@ class Caught:
         draw_box(box.sheet, 'hit', 0, camera.to_screen(box.x), box.y, flip=box.face_dir < 0)
 
 
-GROUND_STATES = (Idle, Walk, Charge, Get)   # 발밑 검사를 하는 상태 (Slam은 돌아온 뒤 검사)
+GROUND_STATES = (Idle, Walk, Get)   # 발밑 검사를 하는 상태 (Slam은 돌아온 뒤 검사)
 
 
 class Box:
@@ -474,7 +441,6 @@ class Box:
         self.dir = 0            # 지금 이동할 방향 (-1, 0, 1)
         self.face_dir = 1       # 바라보는 방향
         self.frame = 0
-        self.charge_time = 0.0
         self.vx, self.vy = 0.0, 0.0
         self.ground = None      # 서 있는 발판
         self.near_tape = None   # 지금 겹쳐 있는 테이프
@@ -486,12 +452,11 @@ class Box:
         self.clear_puddle()
         self.clear_input()
         self.state_machine = StateMachine(self, Idle, {
-            Idle: [(is_air, Jump), (space_down, Charge), (space_ready, Charge), (can_pick_tape, Get), (can_slam, Slam),
+            Idle: [(is_air, Jump), (space_down, Jump), (space_ready, Jump), (can_pick_tape, Get), (can_slam, Slam),
                    (is_moving, Walk)],
-            Walk: [(is_air, Jump), (space_down, Charge), (space_ready, Charge), (can_pick_tape, Get), (can_slam, Slam),
+            Walk: [(is_air, Jump), (space_down, Jump), (space_ready, Jump), (can_pick_tape, Get), (can_slam, Slam),
                    (is_stopped, Idle)],
             Slam: [(done_moving, Walk), (done_stopped, Idle)],
-            Charge: [(is_air, Jump), (space_up, Jump), (space_tapped, Jump)],
             # 한 프레임에 시작 층 아래로 내려가며 바로 착지해도 기절은 착지 높이로 판단
             Jump: [(is_fall, Fall), (stunned, Recover), (done_moving, Walk), (done_stopped, Idle)],
             Fall: [(stunned, Recover), (done_moving, Walk), (done_stopped, Idle)],
@@ -522,29 +487,29 @@ class Box:
         self.puddle_touch = False   # 충돌 처리에서 발이 웅덩이에 닿았는지 (다음 update에서 씀)
         self.in_puddle = False      # 지금 웅덩이 안
         self.puddle_after = 0.0     # 남은 느림 시간 (웅덩이 안에서는 계속 PUDDLE_AFTER)
-        self.puddle_flash = 0.0     # 들어간 순간 그림 남은 시간
 
     def update_puddle(self):
         # 직전 충돌 결과로 웅덩이 안인지 정함, 나온 뒤에도 잠깐 느림
         dt = game_framework.frame_time
-        was_in = self.in_puddle
         self.in_puddle = self.puddle_touch and hazard.enabled
         self.puddle_touch = False
-        self.puddle_flash = max(self.puddle_flash - dt, 0)
         if self.in_puddle:
             self.puddle_after = config.PUDDLE_AFTER
-            if not was_in:
-                self.puddle_flash = config.PUDDLE_FLASH
         elif hazard.enabled:
             self.puddle_after = max(self.puddle_after - dt, 0)
         else:
             self.puddle_after = 0.0
 
+    def draw_slowed(self):
+        # 물웅덩이로 느려진 동안(웅덩이 안 + 나온 뒤 PUDDLE_AFTER)은 땅 위에서 계속 피격 그림 (멈추지는 않음)
+        if self.puddle_after <= 0:
+            return False
+        draw_box(self.sheet, 'hit', 0, camera.to_screen(self.x), self.y, flip=self.face_dir < 0)
+        return True
+
     def clear_input(self):
-        # 미리 누른 키 기억 (Space는 누르고 있는지와 방금 눌렀는지를 따로)
-        self.space_waiting = False  # 눌렀는데 아직 처리 안 됨
-        self.space_held = False     # 지금 누르고 있음
-        self.space_buffer = 0.0     # 누른 뒤 남은 기억 시간
+        # 미리 누른 키 기억 (누른 뒤 남은 기억 시간, 처리하면 0)
+        self.space_buffer = 0.0
         self.shift_buffer = 0.0
 
     def warp(self, x):
@@ -605,14 +570,8 @@ class Box:
         # 땅 위에서 움직일 수 있게 되면 미리 누른 키를 처리
         if self.state_machine.cur not in (Idle, Walk):
             return
-        if self.space_waiting and not self.space_held and self.space_buffer <= 0:
-            self.space_waiting = False  # 너무 일찍 눌렀다 뗀 것은 버림
-        if self.space_waiting:
-            self.state_machine.handle_event(('BUFFER', None))
-            # 이미 뗐으면 차지 0으로 바로 뜀
-            if self.state_machine.cur is Charge and not self.space_held:
-                self.state_machine.handle_event(('BUFFER', None))
-        elif self.shift_buffer > 0:
+        # 착지 직전에 누른 Space는 착지하는 순간 바로 점프
+        if self.space_buffer > 0 or self.shift_buffer > 0:
             self.state_machine.handle_event(('BUFFER', None))
 
     def move_in_air(self, control=True, kinds=None):
@@ -678,19 +637,13 @@ class Box:
         self.state_machine.handle_event(('KEY', event))
 
     def remember_input(self, event):
-        # 상태 머신이 받기 전에 기록 (바로 처리되면 Charge·Get·Slam 진입에서 지움)
-        pressed = event.type == SDL_KEYDOWN
+        # 상태 머신이 받기 전에 누른 키만 기록 (바로 처리되면 Jump·Get·Slam 진입에서 지움), 떼는 것은 무시
+        if event.type != SDL_KEYDOWN:
+            return
         if event.key == SDLK_SPACE:
-            self.space_held = pressed
-            if pressed:
-                self.space_waiting = True
-                self.space_buffer = config.INPUT_BUFFER_TIME
-        elif event.key in (SDLK_LSHIFT, SDLK_RSHIFT) and pressed:
+            self.space_buffer = config.INPUT_BUFFER_TIME
+        elif event.key in (SDLK_LSHIFT, SDLK_RSHIFT):
             self.shift_buffer = config.INPUT_BUFFER_TIME
-
-    def charge_ratio(self):
-        # 차지 비율 c (0~1)
-        return min(self.charge_time / config.CHARGE_MAX_TIME, 1)
 
     def floor_speed(self):
         # 서 있는 층의 기본 속도 (위층일수록 빠름), 물웅덩이 안·나온 뒤 잠깐은 느림
@@ -704,12 +657,6 @@ class Box:
         if self.on_accel_ground and self.dir > 0:
             return self.floor_speed() * config.ACCEL_RATES[self.ground.kind]
         return self.floor_speed()
-
-    def charge_speed(self):
-        # 차지 중 이동 속도 (가속 지형 위에서는 감속 없음)
-        if self.on_accel_ground:
-            return self.walk_speed()
-        return self.floor_speed() * config.CHARGE_SPEED_RATE
 
     def clamp_x(self):
         # 맵 양쪽 끝에 보이지 않는 벽

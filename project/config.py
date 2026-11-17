@@ -28,33 +28,40 @@ SUN_SPEED = 0.05                        # 그리는 해의 진행률이 따라�
 DAY_END_TIME = 2                        # 낮 끝에 경비원 지침을 보여 주는 시간 (초)
 WINDOW_W, WINDOW_GAP_MIN = 90, 50       # 창틀 발판 길이(= 창문 폭), 창틀 사이 최소 간격
 WINDOW_YS = (380, 385, 390, 395, 400, 405)  # 창틀 높이 후보 (창문마다 따로 고름)
-WINDOW_H, WINDOW_INSET = 70, 10         # 임시 창문 그림 높이(창틀 위로), 좌우 안쪽 여백
+WINDOW_H = 70                           # 살아 있는 창문 충돌 박스 높이 (창틀 위로)
+WINDOW_DROP = 10                        # 창문 그림 아랫변을 창틀 윗면보다 이만큼 아래에 (그림만, 발판·판정 그대로)
 WINDOW_SHAKE_TIME, WINDOW_OPEN_TIME = 0.3, 1.0  # 살아 있는 창문: 올라선 뒤 덜컹, 열려 있는 시간 (초)
 WINDOW_SHAKE_PX, WINDOW_SHAKE_STEP = 3, 0.05    # 덜컹 흔들림 폭(px, 그림만), 좌우가 바뀌는 간격 (초)
 WINDOW_DOOR_W = 30                      # 열린 문짝 하나 폭 (창문 양옆 바깥으로)
-PIPE_W, PIPE_PEG_W = 16, 60             # 임시 배수관 굵기, 받침 발판 길이
+PIPE_OVERLAP = 2                        # 배수관 오른쪽 끝이 벽 왼쪽보다 이만큼 안쪽 (벽에 살짝 겹침), 굵기·받침 폭은 그림 폭
 PIPE_PEGS_Y = (300, 390, 480)           # 배수관 받침 높이 (층 중간 · 창틀 층 · 층 중간), 480에서 지붕으로
-POLE_X, POLE_TOP = (92, 108), 630      # 임시 전봇대 x 범위(타일 안), 위 끝 (570 못보다 위)
-POLE_PEG_X = (70, 130)                  # 전봇대 못 발판 x 범위 (타일 안)
+POLE_X = (83, 117)                      # 전봇대 기둥 x 범위 (타일 안, 그림 기둥 폭), 가운데 = 그림 center_x
+POLE_PEG_IN = 3                         # 못이 기둥 가운데를 넘어 박힌 길이 (오른쪽 못 왼쪽 끝 = 97, 왼쪽 못 오른쪽 끝 = 103), 못 폭은 그림 폭
 POLE_PEGS_Y = (300, 390, 480, 570)      # 전봇대 못 높이, 570에서 양옆 지붕으로
+POLE_PEG_SIDES = ('R', 'L', 'R', 'L')   # 못 높이마다 기둥 오른쪽·왼쪽 (왼쪽 못은 그림을 좌우 뒤집음)
 CLOTHESLINE_CHANCE = 0.6                # 일반 건물 사이 빨랫줄 확률 (accel -> gap 사이는 항상, 11/16 0.3 -> 0.6)
 LINE_FROM = ('basic', 'pipe', 'accel', 'gap', 'pole')   # 빨랫줄이 시작될 수 있는 앞 타일
 LINE_TO = ('basic', 'pipe', 'accel')    # 빨랫줄이 이어질 수 있는 다음 타일 (gap은 항상)
 HAZARD_CHANCE = (0.2, 0.35, 0.5)        # 건물 한 채에 방해 요소가 나올 확률 (쉬움·보통·어려움 구간)
 HAZARD_FREE = 2                         # 첫 건물 몇 채는 방해 요소 없음 (비둘기도)
+DEMO_HAZARDS = True                     # 데모용: 모든 건물에 물웅덩이 + 살아 있는 창문, 비둘기는 PIGEON_EVERY채마다 지붕에 미리 앉음 (False면 위 확률 규칙)
+PIGEON_EVERY = 2                        # 데모용 비둘기 간격 (건물 수)
 PUDDLE_W, PUDDLE_H = 140, 18            # 물웅덩이 크기 (도로 윗면에 걸침)
 PUDDLE_EDGE = 20                        # 물웅덩이를 타일 양쪽 끝에서 이만큼 안쪽에
 PUDDLE_RISE = 6                         # 물웅덩이가 도로 윗면 위로 올라오는 높이 (나머지는 아래로)
 PUDDLE_SLOW, PUDDLE_AFTER = 0.7, 0.5    # 물웅덩이 속도 배율, 나온 뒤 느림이 남는 시간 (초)
-PUDDLE_FLASH = 0.2                      # 물웅덩이에 들어가는 순간 피격 그림을 보여 주는 시간 (초)
-PUDDLE_CLIMB_GAP = 80
+PUDDLE_CLIMB_GAP = 80                   # 물웅덩이를 배수관 받침·전봇대 못 x 범위에서 이만큼 떨어뜨림
+PUDDLE_DRAW_Y = ROAD_Y - 4              # 물웅덩이 그림 세로 가운데
+PUDDLE_FRAME = 0.4                      # 물웅덩이 그림 두 장이 바뀌는 간격 (초)
 PIGEON_CHECK_TIME = (4, 8)              # 평평한 지붕에 이만큼 있으면 비둘기를 한 번 굴림 (초, 매번 새로 고름)
-PIGEON_SIT_DX, PIGEON_SIT_MARGIN = 500, 60  # 비둘기 앉는 자리: 박스 x + 500, 화면 오른쪽 끝에서 60 안쪽까지
+PIGEON_SPAWN_MARGIN = 60                # 비둘기를 화면 오른쪽 끝보다 이만큼 더 밖의 지붕에 미리 앉힘
+PIGEON_ALERT_DX = 500                   # 박스가 이 가로 거리 안으로 다가오면 "!" (그 뒤 PIGEON_ALERT_TIME에 돌진)
 PIGEON_ALERT_TIME = 0.8                 # 앉아서 "!"를 띄우는 시간 (초)
 PIGEON_FLY_H, PIGEON_SPEED = 35, 600    # 돌진 높이(가운데 = 지붕 + 35), 왼쪽으로 돌진하는 속도 (px/s)
-PIGEON_W, PIGEON_H = 70, 50             # 비둘기 크기 (충돌 박스도 같음)
-ALERT_W, ALERT_H, ALERT_GAP = 24, 44, 10    # "!" 크기, 비둘기 머리와의 간격                   # 물웅덩이를 배수관 받침·전봇대 못 x 범위에서 이만큼 떨어뜨림
-PLATFORM_THICK = {'roof': 20, 'ledge': 12, 'peg': 10, 'accel': 20, 'line': 4}  # 임시 그림 두께
+PIGEON_W, PIGEON_H = 70, 50             # 비둘기 충돌 박스 크기
+PIGEON_FLAP = 0.1                       # 돌진 날갯짓 그림이 바뀌는 간격 (초)
+ALERT_GAP = 10                          # "!" 그림과 앉은 비둘기 그림 윗변 사이
+LINE_THICK = 4                          # 임시 빨랫줄 그림 두께
 
 # 박스 이동
 BOX_START_X = 200                       # 시작 위치
@@ -63,10 +70,7 @@ ACCEL_RATE = 1.5                        # 가속 지붕 오른쪽 이동 배율
 LINE_RATE = 1.5                         # 빨랫줄 오른쪽 이동 배율
 ACCEL_RATES = {'accel': ACCEL_RATE, 'line': LINE_RATE}  # 가속 받는 발판 종류와 배율
 HOP_HEIGHT = 10                         # 걷기 깡충 높이(그림만)
-CHARGE_MAX_TIME = 0.6                   # 초
-CHARGE_SPEED_RATE = 0.4                 # 차지 중 이동 속도 배율
-CHARGE_SQUASH_X, CHARGE_SQUASH_Y = 0.20, 0.25   # 최대 차지 때 가로로 늘고 세로로 주는 비율
-JUMP_MIN_H, JUMP_MAX_H = 48, 150        # px
+JUMP_H = 110                            # 점프 높이 px (고정, 발디딤 간격 90은 넘고 한 층 180은 못 넘음)
 JUMP_APEX_VY = 120                      # 상승 중 vy가 이 값 이하면 정점 그림 시작 (px/s)
 GRAVITY = 2400                          # px/s²
 AIR_ACCEL = 1080                        # px/s²

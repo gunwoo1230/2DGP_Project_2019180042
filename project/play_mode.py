@@ -12,7 +12,7 @@ import hazard
 from box import Box
 from dummy import Dummy
 from guard import Guard
-from hazard import LiveWindow, PigeonSpawner, Puddle
+from hazard import LiveWindow, Pigeon, PigeonSpawner, Puddle
 from hud import Background, GuardMarker, Hud, Sun
 from level import Level
 from map_data import BOSS_ARENA, TEST_MAP, make_day_map, test_chunks
@@ -27,6 +27,17 @@ def apply_zone():
     zone = 'boss' if day.phase == 'boss' else 'chase'
     hud.set_zone(zone)
     box.zone = zone
+    sync_dummy(zone)
+
+
+def sync_dummy(zone):
+    # 몸통박치기 시험용 허수아비는 보스 구간에만 (점프맵에는 없음)
+    dummies = [o for o in game_world.objects[game_world.LAYER_ITEM] if isinstance(o, Dummy)]
+    if zone == 'boss' and not dummies:
+        spawn_dummy()
+    elif zone != 'boss':
+        for dummy in dummies:
+            game_world.remove_object(dummy)
 
 
 def toggle_zone():
@@ -49,21 +60,26 @@ def spawn_tapes():
 
 
 def spawn_hazards():
-    # 레벨이 정한 자리에 물웅덩이·살아 있는 창문, 조각이 있는 맵이면 비둘기 부르는 것 하나
-    for i, spot in enumerate(level.hazards):
-        if spot is None:
-            continue
+    # 레벨이 정한 자리에 물웅덩이·살아 있는 창문
+    # 비둘기: 데모면 레벨이 정한 지붕마다 미리 앉힘, 아니면 조각이 있는 맵에 비둘기 부르는 것 하나
+    for i, spots in enumerate(level.hazards):
         tile, left = level.tiles[i]
-        if spot[0] == 'window':
-            x, y = tile['windows'][spot[1]]
-            window = LiveWindow(left + x, y, box)
-            game_world.add_object(window, game_world.LAYER_ITEM)
-            game_world.add_collision_pair('box:window', None, window)
-        else:
-            puddle = Puddle(left + spot[1])
-            game_world.add_object(puddle, game_world.LAYER_ITEM)
-            game_world.add_collision_pair('box:puddle', None, puddle)
-    if level.chunks:
+        for kind, value in spots:
+            if kind == 'window':
+                x, y = tile['windows'][value]
+                window = LiveWindow(left + x, y, box)
+                game_world.add_object(window, game_world.LAYER_ITEM)
+                game_world.add_collision_pair('box:window', None, window)
+            else:
+                puddle = Puddle(left + value)
+                game_world.add_object(puddle, game_world.LAYER_ITEM)
+                game_world.add_collision_pair('box:puddle', None, puddle)
+    if config.DEMO_HAZARDS:
+        for x, y in level.pigeons:
+            pigeon = Pigeon(x, y, box, None)
+            game_world.add_object(pigeon, game_world.LAYER_ITEM)
+            game_world.add_collision_pair('box:pigeon', None, pigeon)
+    elif level.chunks:
         game_world.add_object(PigeonSpawner(box, level), game_world.LAYER_ITEM)
 
 
@@ -104,7 +120,6 @@ def restart(kind=None, same_seed=False):
     camera.init(level.right)
     spawn_tapes()
     spawn_hazards()
-    spawn_dummy()
     guard.reset()
     game_world.add_object(guard, game_world.LAYER_ITEM)
     hud.reset_lives()
@@ -144,7 +159,6 @@ def init():
     game_world.add_collision_pair('box:pigeon', box, None)
     spawn_tapes()
     spawn_hazards()
-    spawn_dummy()
     # 경비원은 한 번 만들고 리셋 때 처음 위치로
     guard = Guard()
     game_world.add_object(guard, game_world.LAYER_ITEM)

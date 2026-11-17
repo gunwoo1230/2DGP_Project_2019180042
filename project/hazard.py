@@ -1,47 +1,37 @@
 # 방해 요소: 물웅덩이(도로), 살아 있는 창문(창틀), 비둘기(지붕)
 import random
 
-from pico2d import load_image
-
 import camera
 import config
 import day
 import game_framework
 import game_world
+import parts
 from map_data import difficulty
 
-images = {}
 enabled = True      # 디버그 H로 끄면 감속·창문 열림·비둘기·피격이 모두 없음
 
 
-def load_images():
-    # 다시 시작해도 한 번만 불러옴
-    if not images:
-        images['puddle'] = load_image('resource/placeholder/ph_puddle.png')
-        images['window_lit'] = load_image('resource/placeholder/ph_window_lit.png')
-        images['window_open'] = load_image('resource/placeholder/ph_window_open.png')
-        images['pigeon'] = load_image('resource/placeholder/ph_pigeon.png')
-        images['alert'] = load_image('resource/placeholder/ph_alert.png')
-
-
-def draw_rect(image, x0, y0, x1, y1):
-    # 월드 x 범위·화면 y 범위의 사각형으로 그림
-    image.draw((camera.to_screen(x0) + camera.to_screen(x1)) / 2, (y0 + y1) / 2, x1 - x0, y1 - y0)
+def frame(time, step, names):
+    # step초마다 번갈아 보여 줄 그림 이름
+    return names[int(time / step) % len(names)]
 
 
 class Puddle:
     # 도로 물웅덩이: 밟는 동안과 나온 뒤 잠깐 느려짐
     def __init__(self, x):
-        load_images()
         self.x = x      # 왼쪽 끝 월드 x
+        self.time = 0.0     # 그림 두 장을 번갈아 보여 주는 데 씀
 
     def update(self):
-        pass
+        self.time += game_framework.frame_time
 
     def draw(self):
+        # 판정 크기(PUDDLE_W)는 그대로, 그림은 가로 가운데를 맞춤
         left, bottom, right, top = self.get_bb()
         if camera.visible(left) or camera.visible(right):
-            draw_rect(images['puddle'], left, bottom, right, top)
+            name = frame(self.time, config.PUDDLE_FRAME, ('puddle_1', 'puddle_2'))
+            parts.draw_center(name, camera.to_screen((left + right) / 2), config.PUDDLE_DRAW_Y)
 
     def get_bb(self):
         # 도로 윗면에 걸친 웅덩이 사각형 (박스 쪽에서 발 위치로 다시 판정)
@@ -55,7 +45,6 @@ class Puddle:
 class LiveWindow:
     # 살아 있는 창문: 처음부터 불이 켜져 있고, 그 창틀에 박스가 서면 덜컹 -> 열림
     def __init__(self, x, y, box):
-        load_images()
         self.x, self.y = x, y   # 창틀 왼쪽 끝 월드 x, 창틀 높이
         self.box = box
         self.state = 'lit'      # 'lit' 불 켜짐 -> 'shake' 덜컹 -> 'open' 열림 -> 'done' 보통 창문
@@ -80,17 +69,18 @@ class LiveWindow:
         # 창문 그림 자리 (draw_tile과 같은 위치), done이면 타일의 보통 창문이 보임
         if self.state == 'done' or not (camera.visible(self.x) or camera.visible(self.x + config.WINDOW_W)):
             return
-        x0, x1 = self.x + config.WINDOW_INSET, self.x + config.WINDOW_W - config.WINDOW_INSET
-        y0, y1 = self.y, self.y + config.WINDOW_H
-        if self.state == 'shake':
-            # 좌우로 흔들림 (그림만)
-            dx = config.WINDOW_SHAKE_PX if int(self.time / config.WINDOW_SHAKE_STEP) % 2 == 0 else -config.WINDOW_SHAKE_PX
-            x0, x1 = x0 + dx, x1 + dx
-        draw_rect(images['window_lit'], x0, y0, x1, y1)
+        x = camera.to_screen(self.x)
         if self.state == 'open':
-            # 양옆 바깥으로 열린 문짝
-            draw_rect(images['window_open'], x0 - config.WINDOW_DOOR_W, y0, x0, y1)
-            draw_rect(images['window_open'], x1, y0, x1 + config.WINDOW_DOOR_W, y1)
+            parts.draw_window('window_open', x, self.y)     # 문짝 포함, 가운데는 같음
+        else:
+            # lit, shake (shake는 좌우로 흔들림, 그림만)
+            dx = 0
+            if self.state == 'shake':
+                dx = config.WINDOW_SHAKE_PX if int(self.time / config.WINDOW_SHAKE_STEP) % 2 == 0 \
+                    else -config.WINDOW_SHAKE_PX
+            parts.draw_window('window_lit', x, self.y, dx)
+        # 타일이 먼저 그린 창틀을 창문이 덮으므로 창틀을 다시 그림
+        parts.draw_sill(x, self.y)
 
     def get_bb(self):
         # 열린 문짝까지 포함한 창문 범위 (열려 있을 때만 박스를 맞춤)
@@ -104,7 +94,6 @@ class PigeonSpawner:
     # 박스가 평평한 지붕에 있는 시간이 쌓이면 확률로 비둘기를 부름 (한 번에 하나)
     # 맵 배치 난수가 아니라 random 모듈을 씀 (같은 시드여도 비둘기 시점은 다를 수 있음)
     def __init__(self, box, level):
-        load_images()
         self.box = box
         self.level = level
         self.pigeon = None      # 지금 공격 중인 비둘기
@@ -128,11 +117,18 @@ class PigeonSpawner:
             self.new_wait()
 
     def start_attack(self):
-        # 박스 앞 지붕 높이에 앉음 (화면 오른쪽 밖으로 나가지 않게)
-        screen_right = camera.x + config.SCREEN_W - config.PIGEON_SIT_MARGIN
-        x = min(self.box.x + config.PIGEON_SIT_DX, screen_right)
-        perched = any(p.kind in ('roof', 'accel') and p.x0 <= x <= p.x1 for p in self.level.platforms)
-        self.pigeon = Pigeon(x, perched, self)
+        # 화면 오른쪽 밖, 그 뒤로 처음 나오는 지붕(가속 지붕 포함) 위에 미리 앉혀 둠
+        # 박스가 다가오면서 앉아 있는 비둘기가 보이고, PIGEON_ALERT_DX 안에 들어오면 "!" -> 돌진
+        half = config.PIGEON_W / 2
+        x = camera.x + config.SCREEN_W + config.PIGEON_SPAWN_MARGIN + half
+        roofs = sorted((p for p in self.level.platforms
+                        if p.kind in ('roof', 'accel') and p.x1 - half >= x and p.x1 - p.x0 >= 2 * half),
+                       key=lambda p: p.x0)
+        if not roofs:
+            return      # 앞에 지붕이 없음 (맵 끝)
+        roof = roofs[0]
+        x = max(x, roof.x0 + half)
+        self.pigeon = Pigeon(x, roof.surface_y(x), self.box, self)
         game_world.add_object(self.pigeon, game_world.LAYER_ITEM)
         game_world.add_collision_pair('box:pigeon', None, self.pigeon)
 
@@ -151,20 +147,27 @@ class PigeonSpawner:
 
 
 class Pigeon:
-    # 박스 앞 지붕에 앉아 "!" -> 왼쪽으로 낮게 돌진 (높이 고정, 박스를 따라가지 않음)
-    def __init__(self, x, perched, spawner):
-        load_images()
+    # 앞쪽 지붕에 앉아 있다가 박스가 다가오면 "!" -> 왼쪽으로 낮게 돌진 (높이 고정, 박스를 따라가지 않음)
+    def __init__(self, x, seat_y, box, spawner):
         self.x = x                  # 가운데 월드 x
-        self.y = config.ROOF_Y + config.PIGEON_H / 2    # 가운데, 앉으면 아래 끝이 지붕 높이
-        self.perched = perched      # 앉은 자리 아래에 지붕이 있는지 (없으면 떠 있음, 진짜 그림에서 씀)
+        self.seat_y = seat_y        # 앉은 지붕 높이 (그림 아랫변)
+        self.y = seat_y + config.PIGEON_H / 2   # 충돌 박스 가운데
+        self.box = box
         self.spawner = spawner
-        self.state = 'sit'          # 'sit' 앉아서 "!" -> 'dash' 돌진 (이때만 박스를 맞춤)
+        self.state = 'sit'          # 'sit' 앉아 기다림 -> 'alert' "!" -> 'dash' 돌진 (이때만 박스를 맞춤)
         self.time = 0.0
 
     def update(self):
         dt = game_framework.frame_time
         self.time += dt
         if self.state == 'sit':
+            # 박스가 지붕 층(3층, 발이 ROOF_Y 이상)에 있고 PIGEON_ALERT_DX 안으로 다가오면 (지나쳤어도) "!"
+            # 도로·창틀 층에서는 계속 앉아 있음, "!" 뒤에는 박스가 내려가도 끝까지 돌진
+            on_roof_floor = self.box.y >= config.ROOF_Y - 1
+            if on_roof_floor and self.x - self.box.x <= config.PIGEON_ALERT_DX:
+                self.state = 'alert'
+                self.time = 0.0
+        elif self.state == 'alert':
             if self.time >= config.PIGEON_ALERT_TIME:
                 self.state = 'dash'
                 self.y = config.ROOF_Y + config.PIGEON_FLY_H
@@ -176,18 +179,23 @@ class Pigeon:
 
     def finish(self):
         game_world.remove_object(self)
-        self.spawner.attack_done()
+        if self.spawner is not None:    # 데모용으로 미리 앉힌 비둘기는 부른 쪽이 없음
+            self.spawner.attack_done()
 
     def draw(self):
         if not camera.visible(self.x):
             return
-        hw, hh = config.PIGEON_W / 2, config.PIGEON_H / 2
-        draw_rect(images['pigeon'], self.x - hw, self.y - hh, self.x + hw, self.y + hh)
-        if self.state == 'sit':
-            # 머리 위 "!"
-            bottom = self.y + hh + config.ALERT_GAP
-            draw_rect(images['alert'], self.x - config.ALERT_W / 2, bottom, self.x + config.ALERT_W / 2,
-                      bottom + config.ALERT_H)
+        # 그림은 왼쪽을 봄 (돌진도 왼쪽이라 뒤집지 않음), 충돌 박스 크기는 그림과 따로
+        x = camera.to_screen(self.x)
+        if self.state in ('sit', 'alert'):
+            # 아랫변 = 앉은 지붕, alert면 머리 위 "!"
+            parts.draw_bottom_center('pigeon_sit', x, self.seat_y)
+            if self.state == 'alert':
+                top = self.seat_y + parts.size('pigeon_sit')[1]
+                parts.draw_bottom_center('alert', x, top + config.ALERT_GAP)
+        else:
+            name = frame(self.time, config.PIGEON_FLAP, ('pigeon_fly1', 'pigeon_fly2'))
+            parts.draw_center(name, x, self.y)
 
     def get_bb(self):
         hw, hh = config.PIGEON_W / 2, config.PIGEON_H / 2

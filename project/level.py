@@ -44,10 +44,26 @@ class Level:
         return lines
 
     def place_hazards(self, rng):
-        # 타일마다 None / ('window', 창문 번호) / ('puddle', 타일 안 x), 조각이 없는 맵(보스 무대)은 없음
-        # 첫 건물 몇 채는 없고, 바로 앞 타일과 같은 종류는 연달아 나오지 않음
-        hazards = [None] * len(self.tiles)
+        # 타일마다 방해 요소 목록 [('window', 창문 번호) / ('puddle', 타일 안 x)], 조각이 없는 맵(보스 무대)은 없음
+        # 보통: 첫 건물 몇 채는 없고, 건물마다 많아야 하나, 바로 앞 타일과 같은 종류는 연달아 나오지 않음
+        # 데모(DEMO_HAZARDS): 모든 건물에 살아 있는 창문 하나 + 물웅덩이 하나, 비둘기 자리는 self.pigeons
+        hazards = [[] for _ in self.tiles]
+        self.pigeons = []       # 데모용 비둘기 (월드 x, 앉은 지붕 높이)
         if rng is None:
+            return hazards
+        if config.DEMO_HAZARDS:
+            built = 0
+            for i, (tile, left) in enumerate(self.tiles):
+                if tile['name'] == 'start':
+                    continue
+                hazards[i] = [('window', rng.randrange(len(tile['windows']))),
+                              ('puddle', self.puddle_x(tile['name'], rng))]
+                built += 1
+                roof = tile['roof']
+                if built % config.PIGEON_EVERY == 0 and roof:
+                    roof = Platform(*roof)
+                    x = (roof.x0 + roof.x1) / 2
+                    self.pigeons.append((left + x, roof.surface_y(x)))
             return hazards
         prev_kind = None
         for i, (tile, left) in enumerate(self.tiles):
@@ -56,9 +72,9 @@ class Level:
             if i > config.HAZARD_FREE and tile['name'] != 'start'                     and rng.random() < config.HAZARD_CHANCE[difficulty(i - 1)]:
                 kind = rng.choice([k for k in ('window', 'puddle') if k != prev_kind])
                 if kind == 'window':
-                    hazards[i] = ('window', rng.randrange(len(tile['windows'])))
+                    hazards[i] = [('window', rng.randrange(len(tile['windows'])))]
                 else:
-                    hazards[i] = ('puddle', self.puddle_x(tile['name'], rng))
+                    hazards[i] = [('puddle', self.puddle_x(tile['name'], rng))]
             prev_kind = kind
         return hazards
 
@@ -87,7 +103,7 @@ class Level:
                     if kind in ('roof', 'accel'):
                         spots['roof'].append(Platform(kind, left + x0, y0, left + x1, y1))
                 for j, (x, y) in enumerate(tile['windows']):
-                    if self.hazards[i] != ('window', j):
+                    if ('window', j) not in self.hazards[i]:
                         spots['ledge'].append((left + x + config.WINDOW_W / 2, y))
             # 빨랫줄은 왼쪽 끝이 있는 타일의 조각에 속함
             for line in self.lines:
@@ -129,7 +145,7 @@ class Level:
             x0, x1 = camera.to_screen(line.x0), camera.to_screen(line.x1)
             if x1 < -config.DRAW_MARGIN or x0 > config.SCREEN_W + config.DRAW_MARGIN:
                 continue
-            draw_slope(images['line'], x0, line.y0, x1, line.y1, config.PLATFORM_THICK['line'])
+            draw_slope(images['line'], x0, line.y0, x1, line.y1, config.LINE_THICK)
 
     def draw_debug(self):
         # F1: 발판 윗면 선 (빨강, 가속 지붕·빨랫줄은 주황)

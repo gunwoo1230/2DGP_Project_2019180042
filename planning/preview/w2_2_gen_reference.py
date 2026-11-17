@@ -9,7 +9,7 @@ HAZARD_CHANCE = (0.2, 0.35, 0.5)        # 쉬움·보통·어려움: 건물 한 
 HAZARD_FREE = 2                         # 첫 건물 몇 채는 방해 요소 없음
 PUDDLE_W = 140
 PUDDLE_CLIMB_GAP = 80                   # 배수관·전봇대 받침에서 이만큼 떨어뜨림
-CLIMB_X = {'pipe': (-20, 40), 'pole': (70, 130)}    # 오르는 곳 x 범위 (타일 안)
+CLIMB_X = {'pipe': (2.5, 53.5), 'pole': (46, 154)}  # 오르는 곳 x 범위 (타일 안), 11/17 진짜 그림 받침·못 폭
 TAPE_FLOOR_WEIGHT = {'roof': 5, 'ledge': 3}
 TAPE_ROOF_INSET = 40
 
