@@ -148,13 +148,14 @@ class PigeonSpawner:
 
 class Pigeon:
     # 앞쪽 지붕에 앉아 있다가 박스가 다가오면 "!" -> 왼쪽으로 낮게 돌진 (높이 고정, 박스를 따라가지 않음)
-    def __init__(self, x, seat_y, box, spawner):
+    def __init__(self, x, seat_y, box, spawner, ready=None):
         self.x = x                  # 가운데 월드 x
         self.seat_y = seat_y        # 앉은 지붕 높이 (그림 아랫변)
         self.y = seat_y + config.PIGEON_H / 2   # 충돌 박스 가운데
         self.box = box
         self.spawner = spawner
         self.state = 'sit'          # 'sit' 앉아 기다림 -> 'alert' "!" -> 'dash' 돌진 (이때만 박스를 맞춤)
+        self.ready = ready          # 있으면 거리 대신 이 조건이 참일 때 "!" (데모 맵)
         self.time = 0.0
 
     def update(self):
@@ -163,8 +164,12 @@ class Pigeon:
         if self.state == 'sit':
             # 박스가 지붕 층(3층, 발이 ROOF_Y 이상)에 있고 PIGEON_ALERT_DX 안으로 다가오면 (지나쳤어도) "!"
             # 도로·창틀 층에서는 계속 앉아 있음, "!" 뒤에는 박스가 내려가도 끝까지 돌진
-            on_roof_floor = self.box.y >= config.ROOF_Y - 1
-            if on_roof_floor and self.x - self.box.x <= config.PIGEON_ALERT_DX:
+            if self.ready is not None:
+                alert = self.ready()
+            else:
+                on_roof_floor = self.box.y >= config.ROOF_Y - 1
+                alert = on_roof_floor and self.x - self.box.x <= config.PIGEON_ALERT_DX
+            if alert:
                 self.state = 'alert'
                 self.time = 0.0
         elif self.state == 'alert':

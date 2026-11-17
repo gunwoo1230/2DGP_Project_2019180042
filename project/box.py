@@ -265,6 +265,8 @@ class Recover:
         box.vx = 0.0
         box.recover_time = 0.0
         box.stun_time = (box.takeoff_y - box.y) / config.STUN_PX_PER_SEC    # 떨어진 높이만큼 멈춤
+        if box.from_hit:
+            box.stun_time *= box.hit_stun_scale     # 피격 종류별 배율 (비둘기는 짧게)
         game_world.add_object(DizzyFx(box), game_world.LAYER_FX)
 
     @staticmethod
@@ -449,6 +451,7 @@ class Box:
         self.on_accel_ground = False    # 가속 지붕·빨랫줄 위 여부
         self.invincible = 0.0   # 남은 무적 시간 (피격 기절 뒤)
         self.from_hit = False   # 지금 기절이 피격에서 온 것인지
+        self.hit_stun_scale = 1.0   # 피격 기절 시간 배율
         self.clear_puddle()
         self.clear_input()
         self.state_machine = StateMachine(self, Idle, {
@@ -482,6 +485,7 @@ class Box:
     def clear_hit(self):
         self.invincible = 0.0
         self.from_hit = False
+        self.hit_stun_scale = 1.0
 
     def clear_puddle(self):
         self.puddle_touch = False   # 충돌 처리에서 발이 웅덩이에 닿았는지 (다음 update에서 씀)
@@ -526,12 +530,13 @@ class Box:
         self.clear_hit()
         self.state_machine.reset(Caught)
 
-    def hit(self):
+    def hit(self, stun_scale=1.0):
         # 방해 요소에 맞음 (방해 요소가 켜진 추격 구간에서, 이미 맞았거나 기절·잡힘·무적 중이 아니고, 도로에 서 있지 않을 때)
         if not hazard.enabled or self.zone != 'chase' or self.invincible > 0                 or self.state_machine.cur in (Hit, Recover, Caught):
             return
         if self.state_machine.cur in GROUND_STATES and self.ground and self.ground.kind == 'road':
             return
+        self.hit_stun_scale = stun_scale
         self.state_machine.reset(Hit)
 
     def drop_to(self, y):
@@ -695,9 +700,12 @@ class Box:
             left, _, right, _ = other.get_bb()
             if self.state_machine.cur in GROUND_STATES and self.ground and self.ground.kind == 'road'                     and self.x + config.FOOT_HALF >= left and self.x - config.FOOT_HALF <= right:
                 self.puddle_touch = True
-        elif group in ('box:window', 'box:pigeon'):
-            if other.state in ('open', 'dash'):     # 열린 창문, 돌진하는 비둘기
+        elif group == 'box:window':
+            if other.state == 'open':       # 열린 창문
                 self.hit()
+        elif group == 'box:pigeon':
+            if other.state == 'dash':       # 돌진하는 비둘기: 기절을 짧게
+                self.hit(config.PIGEON_STUN_SCALE)
         elif group == 'box:dummy':
             if self.state_machine.cur is Slam and not self.slam_returning:
                 other.on_hit()

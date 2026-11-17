@@ -6,6 +6,7 @@ import config
 import day
 import font_data
 import game_framework
+from guard import CELL_W, HAT_H, HAT_W
 from sprite_data import draw_item
 
 # 구간별 지금 칸 낱말
@@ -54,9 +55,9 @@ class Sun:
 
 
 class GuardMarker:
-    # 화면 왼쪽 밖 경비원 표시: 가까울수록 크게, 아주 가까우면 깜빡임 (모자 그림 대신 임시 네모)
+    # 화면 왼쪽 밖 경비원 표시 (모자 그림): 가까울수록 크게, 아주 가까우면 깜빡임
     def __init__(self, guard):
-        self.image = load_image('resource/placeholder/ph_guard.png')
+        self.image = load_image('resource/parts/guard_hat.png')
         self.font = load_image('resource/font_sheet.png')
         self.guard = guard
         self.blink_time = 0.0   # 깜빡임 거리 안에 들어온 뒤 지난 시간
@@ -70,7 +71,7 @@ class GuardMarker:
 
     def offscreen(self):
         # 경비원 오른쪽 끝이 플레이 칸 왼쪽 끝보다 얼마나 밖에 있는지 (0 이하면 화면 안)
-        return config.PLAY_LEFT - camera.to_screen(self.guard.x + config.GUARD_W / 2)
+        return config.PLAY_LEFT - camera.to_screen(self.guard.x + CELL_W / 2)
 
     def scale(self, off):
         # 막 들어오기 직전 1배, MARKER_FAR 이상 떨어지면 MARKER_MIN_SCALE배
@@ -83,16 +84,17 @@ class GuardMarker:
         off = self.offscreen()
         if off <= 0:
             return
-        # 아주 가까우면 MARKER_BLINK_TIME마다 숨김 (네모와 화살표 함께)
+        # 아주 가까우면 MARKER_BLINK_TIME마다 숨김 (모자와 화살표 함께)
         if off <= config.MARKER_BLINK_DIST and int(self.blink_time / config.MARKER_BLINK_TIME) % 2 == 1:
             return
-        size =config.MARKER_SIZE * self.scale(off)
-        self.image.draw(config.MARKER_X, config.MARKER_Y, size, size)
-        # 네모 왼쪽에 붙는 ← (크기는 그대로)
-        l, b, w, h = font_data.CELL_RECT['←']
-        s = config.MARKER_ARROW_SCALE
-        arrow_x = config.MARKER_X - size / 2 - config.MARKER_ARROW_GAP - w * s / 2
-        self.font.clip_draw(l, b, w, h, arrow_x, config.MARKER_Y, w * s, h * s)
+        s = self.scale(off)
+        w = HAT_W * s
+        self.image.draw(config.MARKER_X, config.MARKER_Y, w, HAT_H * s)
+        # 모자 왼쪽에 붙는 ← (크기는 그대로)
+        l, b, aw, ah = font_data.CELL_RECT['←']
+        a = config.MARKER_ARROW_SCALE
+        arrow_x = config.MARKER_X - w / 2 - config.MARKER_ARROW_GAP - aw * a / 2
+        self.font.clip_draw(l, b, aw, ah, arrow_x, config.MARKER_Y, aw * a, ah * a)
 
     def get_bb(self):
         pass
@@ -162,11 +164,14 @@ class Hud:
         return self.lives + self.reserved >= config.TAPE_MAX
 
     def draw_frame_strips(self):
-        # 플레이 칸 밖으로 삐져나온 맵을 배경의 좌우 띠로 다시 덮음
+        # 플레이 칸 밖으로 삐져나온 맵·배경을 일기장 틀의 좌우 띠로 다시 덮음
         w, h = config.FRAME_STRIP_W, config.FRAME_STRIP_TOP - config.FRAME_STRIP_BOTTOM
         y = (config.FRAME_STRIP_BOTTOM + config.FRAME_STRIP_TOP) / 2
         for left in (0, config.SCREEN_W - w):
             self.frame.clip_draw(left, config.FRAME_STRIP_BOTTOM, w, h, left + w / 2, y)
+        # 하늘이 덮은 플레이 칸 위 테두리 선 (그림 칸 맨 위 ~ 선 아래 끝)
+        h = config.PLAY_TOP - config.FRAME_TOP_LINE
+        self.frame.clip_draw(0, config.FRAME_TOP_LINE, config.SCREEN_W, h, config.SCREEN_W / 2, config.FRAME_TOP_LINE + h / 2)
 
     def draw_now(self):
         time_word, place_word = NOW_WORDS[self.zone]

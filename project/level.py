@@ -1,4 +1,6 @@
 # 레벨: 타일 목록으로 발판과 그릴 것을 만듦
+import random
+
 from pico2d import draw_line
 
 import camera
@@ -8,16 +10,20 @@ from tiles import Platform, build_tile, climb_x, draw_slope, draw_tile, images, 
 
 
 class Level:
-    def __init__(self, tile_names, chunks, rng):
+    def __init__(self, tile_names, chunks, rng, layout=None):
         load_images()
-        self.load(tile_names, chunks, rng)
+        self.load(tile_names, chunks, rng, layout)
 
-    def load(self, tile_names, chunks, rng):
+    def load(self, tile_names, chunks, rng, layout=None):
         # 레벨 교체 (박스가 이 객체를 들고 있으므로 내용만 바꿈), 난수로 타일마다 양식·창문을 정함
+        # layout(데모 맵)이 있으면 빨랫줄·방해 요소·테이프·비둘기는 난수 대신 그 배치만 씀
         self.names = tile_names
+        self.layout = layout
         self.chunks = chunks    # 조각 범위 (첫 타일 번호, 마지막 타일 번호)
         # (만든 타일, 왼쪽 끝 월드 x)
-        self.tiles = [(build_tile(name, rng), config.MAP_LEFT + config.TILE_W * i)
+        # 데모 맵에서 더 붙인 소개 칸은 따로 만든 난수를 써서 뒤 칸의 양식·창문이 그대로이게
+        extra = layout['extra_intro'] if layout is not None else []
+        self.tiles = [(build_tile(name, random.Random(i) if i in extra else rng), config.MAP_LEFT + config.TILE_W * i)
                       for i, name in enumerate(tile_names)]
         self.right = config.MAP_LEFT + config.TILE_W * len(tile_names)
         # 빨랫줄 발판 (두 타일에 걸침), 모든 타일을 만든 뒤 같은 난수로 정함
@@ -31,12 +37,16 @@ class Level:
         self.tapes = self.place_tapes(rng)
 
     def make_lines(self, rng):
-        # 이웃한 두 건물의 창틀을 잇는 빨랫줄: gap 앞은 항상, 그 밖은 가끔
+        # 이웃한 두 건물의 창틀을 잇는 빨랫줄: gap 앞은 항상, 그 밖은 가끔 (데모 맵은 정해진 칸만)
         # 앞 건물 마지막 창틀 오른쪽 끝 -> 다음 건물 첫 창틀 왼쪽 끝
         lines = []
-        for (prev, prev_left), (tile, left) in zip(self.tiles, self.tiles[1:]):
-            if tile['name'] == 'gap' or (prev['name'] in config.LINE_FROM and tile['name'] in config.LINE_TO
-                                         and rng.random() < config.CLOTHESLINE_CHANCE):
+        for i, ((prev, prev_left), (tile, left)) in enumerate(zip(self.tiles, self.tiles[1:]), start=1):
+            if self.layout is not None:
+                hang = (tile['name'] == 'gap' and (i - 1, i) not in self.layout['no_lines'])                     or (i - 1, i) in self.layout['lines']
+            else:
+                hang = tile['name'] == 'gap' or (prev['name'] in config.LINE_FROM and tile['name'] in config.LINE_TO
+                                                 and rng.random() < config.CLOTHESLINE_CHANCE)
+            if hang:
                 px, py = prev['windows'][-1]
                 nx, ny = tile['windows'][0]
                 lines.append(Platform('line', prev_left + px + config.WINDOW_W, py, left + nx, ny))
@@ -49,8 +59,11 @@ class Level:
         # 데모(DEMO_HAZARDS): 모든 건물에 살아 있는 창문 하나 + 물웅덩이 하나, 비둘기 자리는 self.pigeons
         hazards = [[] for _ in self.tiles]
         self.pigeons = []       # 데모용 비둘기 (월드 x, 앉은 지붕 높이)
+        self.pigeon_tile = None     # 데모 맵: 이 칸 지붕에 서면 비둘기 "!"
         if rng is None:
             return hazards
+        if self.layout is not None:
+            return self.place_layout_hazards()
         if config.DEMO_HAZARDS:
             built = 0
             for i, (tile, left) in enumerate(self.tiles):
@@ -78,6 +91,19 @@ class Level:
             prev_kind = kind
         return hazards
 
+    def place_layout_hazards(self):
+        # 데모 맵: 정해진 살아 있는 창문·물웅덩이, 비둘기는 정해진 자리에 앉아 있다가 정해진 칸 지붕에 서면 "!"
+        hazards = [[] for _ in self.tiles]
+        for i, j in self.layout['windows']:
+            hazards[i].append(('window', j))
+        for i, x in self.layout['puddles']:
+            hazards[i].append(('puddle', x))
+        i, x = self.layout['pigeon_seat']
+        tile, left = self.tiles[i]
+        self.pigeons.append((left + x, Platform(*tile['roof']).surface_y(x)))
+        self.pigeon_tile = self.layout['pigeon']
+        return hazards
+
     @staticmethod
     def puddle_x(name, rng):
         # 물웅덩이 왼쪽 끝 x (타일 안): 오르는 곳에서 PUDDLE_CLIMB_GAP 이상 떨어진 자리 중 하나
@@ -94,6 +120,18 @@ class Level:
         # 지붕 = 지붕·가속 지붕 발판 위 아무 x, 창틀 층 = 살아 있지 않은 창틀 가운데·빨랫줄 가운데
         tapes = []
         if rng is None:
+            return tapes
+        if self.layout is not None:
+            # 데모 맵: 정해진 칸 지붕 가운데, 정해진 창틀 가운데
+            for i in self.layout['tapes']:
+                tile, left = self.tiles[i]
+                roof = Platform(*tile['roof'])
+                x = (roof.x0 + roof.x1) / 2
+                tapes.append((left + x, roof.surface_y(x)))
+            for i, j in self.layout['ledge_tapes']:
+                tile, left = self.tiles[i]
+                x, y = tile['windows'][j]
+                tapes.append((left + x + config.WINDOW_W / 2, y))
             return tapes
         for first, last in self.chunks:
             spots = {'roof': [], 'ledge': []}

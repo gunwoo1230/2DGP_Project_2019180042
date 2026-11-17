@@ -69,12 +69,7 @@ class Platform:
 def load_images():
     # 리셋·재시작해도 한 번만 불러옴 (건물·창문 등 진짜 그림은 parts가 처음 그릴 때 불러옴)
     if not images:
-        images['road'] = load_image('resource/placeholder/ph_ground.png')
         images['line'] = load_image('resource/placeholder/ph_rope.png')
-
-
-def draw_rect(image, x0, y0, x1, y1):
-    image.draw((x0 + x1) / 2, (y0 + y1) / 2, x1 - x0, y1 - y0)
 
 
 def draw_slope(image, x0, y0, x1, y1, thick):
@@ -181,7 +176,9 @@ def climb_x(name):
 def draw_tile(tile, left):
     # 순서: 도로 → 건물 → 배수관·전봇대 → 받침·못 → 창문 → 창틀 (빨랫줄은 Level이 타일 다음에)
     screen_left = camera.to_screen(left)
-    draw_rect(images['road'], screen_left, config.PLAY_BOTTOM, screen_left + TILE_W, ROAD_Y)
+    # 도로 그림 한 장 (600 × 100, 게임 크기 그대로): 왼쪽 끝 = 타일 왼쪽, 윗변 = 도로
+    road = parts.image('road')
+    road.draw(screen_left + road.w / 2, ROAD_Y - road.h / 2)
     if tile['walls']:
         # 건물 그림 한 장: 가로는 벽 x 범위에 맞춤 (그림 폭과 다르면 가로만 늘림, pole 360 <- 320)
         # 세로는 그대로, 지붕 줄 = 570 (아랫변 줄이 도로에 옴)

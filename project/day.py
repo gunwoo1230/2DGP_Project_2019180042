@@ -6,14 +6,16 @@ import game_framework
 
 phase = 'chase'     # 'chase' 추격, 'caught' 잡힘, 'day_end' 경비원 지침, 'boss' 보스 구간
 best_tile = 0       # 지금까지 들어간 가장 먼 타일 번호
+best_x = 0.0        # 지금까지 간 가장 먼 박스 x (데모 맵의 해 진행)
 sun_p = 0.0         # 그리는 해의 진행률 (0 ~ 1)
 timer = 0.0         # 잡힘·낮 끝이 이어진 시간
 
 
 def reset():
-    global phase, best_tile, sun_p, timer
+    global phase, best_tile, best_x, sun_p, timer
     phase = 'chase'
     best_tile = 0
+    best_x = 0.0
     sun_p = 0.0
     timer = 0.0
 
@@ -36,17 +38,24 @@ def snap(box_x, level):
 
 def record(box_x, level):
     # 추격 중에만 점수가 오름, 뒤로 가거나 떨어져도 줄지 않음
-    # 마지막 칸에 들어가면 낮 끝 (해가 오른쪽에 닿음)
-    global best_tile, phase, timer
+    # 마지막 칸에 들어가면 (데모 맵은 마지막 칸 오른쪽 끝에 오면) 낮 끝 (해가 오른쪽에 닿음)
+    global best_tile, best_x, phase, timer
     if phase == 'chase':
         best_tile = max(best_tile, level.tile_index(box_x))
-        if best_tile == len(level.tiles) - 1:
+        best_x = max(best_x, box_x)
+        if progress(level) >= 1:
             phase = 'day_end'
             timer = 0.0
 
 
 def progress(level):
-    # 진행률 = 최고 도달 타일 / 마지막 칸 번호 (0 ~ 1)
+    # 진행률 (0 ~ 1)
+    # 보통: 최고 도달 타일 / 마지막 칸 번호
+    # 데모 맵: 시작 위치 -> 마지막 칸 오른쪽 끝(박스가 갈 수 있는 끝)까지 간 비율
+    if level.layout is not None:
+        start = config.BOX_START_X
+        end = level.right - config.BOX_BB_W / 2 - config.DEMO_END_MARGIN
+        return min(max((best_x - start) / (end - start), 0), 1)
     return min(best_tile / (len(level.tiles) - 1), 1)
 
 

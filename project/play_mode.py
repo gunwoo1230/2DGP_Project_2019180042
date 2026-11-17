@@ -9,14 +9,17 @@ import day
 import game_framework
 import game_world
 import hazard
-from box import Box
+from box import Box, Recover
 from dummy import Dummy
 from guard import Guard
 from hazard import LiveWindow, Pigeon, PigeonSpawner, Puddle
 from hud import Background, GuardMarker, Hud, Sun
 from level import Level
-from map_data import BOSS_ARENA, TEST_MAP, make_day_map, test_chunks
+from map_data import BOSS_ARENA, DEMO_SEED, TEST_MAP, make_day_map, make_demo_map, test_chunks
+from scenery import Scenery, Sky
 from tape import TapeItem
+
+pit_stunned = False     # 데모 맵: 틈 추락으로 기절했는지 (그 뒤 경비원이 빨라짐)
 
 # 디버그: 지금 x에서 이 높이로 옮겨 떨어뜨림
 DROP_KEYS = {SDLK_1: config.ROAD_Y, SDLK_2: config.LEDGE_Y, SDLK_3: config.ROOF_Y}
@@ -74,7 +77,15 @@ def spawn_hazards():
                 puddle = Puddle(left + value)
                 game_world.add_object(puddle, game_world.LAYER_ITEM)
                 game_world.add_collision_pair('box:puddle', None, puddle)
-    if config.DEMO_HAZARDS:
+    if level.layout is not None:
+        # 데모 맵: 정해진 칸 지붕에 앉아 있다가, 박스가 그 칸 지붕에 서면 바로 "!" (시간·확률 굴림 없음)
+        def ready():
+            return box.standing_kind() == 'roof' and level.tile_index(box.x) == level.pigeon_tile
+        for x, y in level.pigeons:
+            pigeon = Pigeon(x, y, box, None, ready)
+            game_world.add_object(pigeon, game_world.LAYER_ITEM)
+            game_world.add_collision_pair('box:pigeon', None, pigeon)
+    elif config.DEMO_HAZARDS:
         for x, y in level.pigeons:
             pigeon = Pigeon(x, y, box, None)
             game_world.add_object(pigeon, game_world.LAYER_ITEM)
@@ -95,10 +106,15 @@ def new_seed():
 
 
 def new_map(kind, same_seed=False):
-    # 맵 종류('day' 낮 맵 / 'test' 시험 맵)에 맞는 타일 목록·조각 범위와, 이어서 양식·창문·빨랫줄을 정할 난수
-    # 같은 시드면 같은 맵 (버그 재현용)
+    # 맵 종류('day' 낮 맵 / 'test' 시험 맵 / 'demo' 데모 맵)에 맞는 타일 목록·조각 범위와,
+    # 이어서 양식·창문·빨랫줄을 정할 난수, 데모 맵의 고정 배치 (Level 인자 순서)
+    # 같은 시드면 같은 맵 (버그 재현용), 데모 맵은 항상 DEMO_SEED
     global map_kind, seed
     map_kind = kind
+    if kind == 'demo':
+        print('demo')
+        names, layout = make_demo_map()
+        return names, [], random.Random(DEMO_SEED), layout
     if not same_seed:
         seed = new_seed()
     print(f'seed = {seed}')
@@ -107,25 +123,47 @@ def new_map(kind, same_seed=False):
         names, chunks = make_day_map(rng)
     else:
         names, chunks = TEST_MAP, test_chunks(TEST_MAP)
-    return names, chunks, rng
+    return names, chunks, rng, None
 
 
 def restart(kind=None, same_seed=False):
-    # 처음부터 (맵 종류는 그대로, 보스 무대에서는 낮 맵): 박스·경비원·생명·테이프·허수아비·점수·해, 구간은 추격
+    # 처음부터 (맵 종류는 그대로, 보스 무대에서는 낮 맵·데모 맵): 박스·경비원·생명·테이프·허수아비·점수·해, 구간은 추격
     if kind is None:
-        kind = 'day' if level.names == BOSS_ARENA else map_kind
+        kind = 'day' if level.names == BOSS_ARENA and map_kind != 'demo' else map_kind
     game_world.remove_layer(game_world.LAYER_ITEM)
     game_world.remove_layer(game_world.LAYER_FX)
     level.load(*new_map(kind, same_seed))
     camera.init(level.right)
     spawn_tapes()
     spawn_hazards()
-    guard.reset()
+    reset_guard()
     game_world.add_object(guard, game_world.LAYER_ITEM)
     hud.reset_lives()
     box.reset()
     day.reset()
     apply_zone()
+
+
+def reset_guard():
+    # 데모 맵은 화면 밖(모자만 보임)에서 데모 속도로 시작, 추락 기절 전
+    global pit_stunned
+    pit_stunned = False
+    if level.layout is not None:
+        guard.reset(config.DEMO_GUARD_HIDE_GAP, config.DEMO_GUARD_SPEED)
+    else:
+        guard.reset()
+
+
+def update_demo_guard():
+    # 데모 맵 경비원: 틈 추락 기절 전에는 화면 밖에 머묾, 그 기절이 끝나면 빨라짐, 박스를 잡지 않음
+    global pit_stunned
+    pit = level.layout['pit']
+    if not pit_stunned and box.state_machine.cur is Recover and level.tile_index(box.x) in (pit, pit + 1):
+        pit_stunned = True
+    if pit_stunned and box.state_machine.cur is not Recover:
+        guard.speed = config.DEMO_GUARD_SPEED * config.DEMO_GUARD_BOOST
+    gap = config.DEMO_GUARD_MIN_GAP if pit_stunned else config.DEMO_GUARD_HIDE_GAP
+    guard.x = min(guard.x, box.x - gap)
 
 
 def to_boss():
@@ -146,7 +184,9 @@ def init():
     day.reset()
     hud = Hud()
     game_world.add_object(Background(), game_world.LAYER_BG)
+    game_world.add_object(Sky(), game_world.LAYER_BG)          # 일기장 틀 다음: 그림 칸을 덮음
     game_world.add_object(Sun(), game_world.LAYER_SKY)
+    game_world.add_object(Scenery(), game_world.LAYER_SKY)     # 해 다음: 구름·산·동네
     game_world.add_object(hud, game_world.LAYER_UI)
     level = Level(*new_map('day'))
     game_world.add_object(level, game_world.LAYER_MAP)
@@ -181,7 +221,9 @@ def update():
 def update_chase():
     # 가로 거리만 보고 잡힘 (지붕 위에서도), 잡히면 잠깐 멈춘 뒤 처음부터
     # 낮 끝에는 경비원이 지친 모습을 잠깐 보여 준 뒤 보스 구간으로
-    if day.phase == 'chase' and guard.enabled and box.x - guard.x <= config.CATCH_DIST:
+    if day.phase == 'chase' and guard.enabled and level.layout is not None:
+        update_demo_guard()     # 데모 맵은 잡히지 않음
+    elif day.phase == 'chase' and guard.enabled and box.x - guard.x <= config.CATCH_DIST:
         day.phase = 'caught'
         day.timer = 0.0
         box.catch()
@@ -220,7 +262,9 @@ def handle_events():
         elif event.type == SDL_KEYDOWN and event.key == SDLK_F1:
             show_collision_boxes = not show_collision_boxes
         elif event.type == SDL_KEYDOWN and event.key == SDLK_r:
-            restart()       # 새 시드 (새 맵)
+            restart()       # 새 시드 (새 맵), 데모 맵이면 데모 맵 처음부터
+        elif event.type == SDL_KEYDOWN and event.key == SDLK_d:
+            restart('demo')     # 발표 녹화용 데모 맵 처음부터
         elif event.type == SDL_KEYDOWN and event.key == SDLK_t:
             restart(same_seed=True)     # 같은 시드 (같은 맵 다시)
         elif event.type == SDL_KEYDOWN and day.phase == 'caught':

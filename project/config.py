@@ -22,8 +22,10 @@ CHUNK_LEVELS = (20, 40)                 # 건물 수가 이 값보다 작으면 
 CLIMB_TILES = ('pipe', 'pole')          # 조각의 climb 자리에 들어갈 타일 (같은 확률로 고름)
 FIXED_SEED = None                       # 숫자를 넣으면 항상 그 시드로 맵을 만듦 (시험용)
 MINUTES_PER_TILE = 10                   # 건물 1칸 = 10분
+DEMO_END_MARGIN = 2                     # 데모 맵: 박스가 맵 오른쪽 벽에서 이 안으로 오면 해가 끝에 닿음 (px)
 SUN_LEFT_X, SUN_RIGHT_X, SUN_Y = 80, 1520, 770     # 해 일직선 길 (화면 좌표, 플레이 칸 맨 위)
 SUN_SCALE = 0.7                         # 해 그리기 배율
+CLOUD_DRIFT = 10                        # 구름이 스스로 왼쪽으로 흐르는 속도 (px/s)
 SUN_SPEED = 0.05                        # 그리는 해의 진행률이 따라가는 속도 (초당)
 DAY_END_TIME = 2                        # 낮 끝에 경비원 지침을 보여 주는 시간 (초)
 WINDOW_W, WINDOW_GAP_MIN = 90, 50       # 창틀 발판 길이(= 창문 폭), 창틀 사이 최소 간격
@@ -60,6 +62,7 @@ PIGEON_ALERT_TIME = 0.8                 # 앉아서 "!"를 띄우는 시간 (초
 PIGEON_FLY_H, PIGEON_SPEED = 35, 600    # 돌진 높이(가운데 = 지붕 + 35), 왼쪽으로 돌진하는 속도 (px/s)
 PIGEON_W, PIGEON_H = 70, 50             # 비둘기 충돌 박스 크기
 PIGEON_FLAP = 0.1                       # 돌진 날갯짓 그림이 바뀌는 간격 (초)
+PIGEON_STUN_SCALE = 0.5                 # 비둘기에 맞은 기절 시간 배율 (떨어진 높이로 잰 시간 × 이 값, 지붕에서 약 2초 -> 1초)
 ALERT_GAP = 10                          # "!" 그림과 앉은 비둘기 그림 윗변 사이
 LINE_THICK = 4                          # 임시 빨랫줄 그림 두께
 
@@ -100,9 +103,15 @@ FX_RISE_TIME, FX_SPARKLE_TIME, FX_FLY_TIME = 0.25, 0.25, 0.35   # 초
 FX_RISE_H, FX_SPARKLE_FPS = 60, 8       # 머리 위 높이(px), 반짝임 속도
 FX_END_SCALE = 0.37                     # 생명 칸에 도착할 때 배율
 
-# 경비원 (임시 사각형)
-GUARD_W, GUARD_H = 90, 170              # 그림 크기
+# 경비원 (그림 크기는 resource/parts/guard.json)
+GUARD_RUN_FRAME_TIME = 0.1              # 달리기 한 장 시간 (초), 달리는 속도에 맞춰 조정
 GUARD_START_GAP = 600                   # 시작할 때 박스와의 거리
+# 데모 맵 경비원: 잡지 않음, 틈 추락(DEMO_LAYOUT 'pit') 전에는 화면 밖(모자만), 추락 기절 동안 따라붙어 마지막 칸에서 등장
+DEMO_GUARD_SPEED = 300                  # 데모 맵 경비원 속도 (px/s), 등장 시점은 이 값으로 조정
+DEMO_GUARD_BOOST = 1.3                  # 틈 추락 기절이 끝난 뒤 속도 배율
+DEMO_GUARD_HIDE_GAP = 2000              # 틈 추락 전에는 박스 뒤로 이보다 가까이 오지 않음 (화면 밖, 모자 작게), 시작 거리도 이 값
+DEMO_GUARD_MIN_GAP = 150                # 박스 뒤로 이보다 가까이 오지 않음 (잡지 않음)
+DEMO_INTRO_TILES = 2                    # 데모 맵 소개 구간 칸 수 (start + basic), 늘리면 도로를 더 오래 달림
 GUARD_START_DELAY = 1                   # 출발 전 기다리는 시간 (초)
 GUARD_SPEED = 280                       # px/s
 CATCH_DIST = 90                         # 박스와의 가로 거리가 이 이하면 잡힘
@@ -126,8 +135,9 @@ UI_DAY_X, UI_HOUR_X, UI_MIN_X = 1218, 1328, 1474        # 도망친 지 칸 숫�
 TIP_INTERVAL, TIP_CHAR_TIME = 6, 0.05   # 팁 바뀌는 간격, 한 글자 써지는 시간 (초)
 UI_TIP_X, UI_TIP_Y = 52.5, 54           # 원고지 첫 칸 가운데
 MARKER_X, MARKER_Y = 70, 360            # 화면 밖 경비원 표시 가운데 (왼쪽 가운데)
-MARKER_SIZE, MARKER_MIN_SCALE, MARKER_FAR = 64, 0.35, 1000  # 기본 크기, 가장 작은 배율, 이 거리부터 가장 작음
-MARKER_ARROW_SCALE, MARKER_ARROW_GAP = 0.5, 4   # 화살표 배율, 네모와의 간격(px)
+MARKER_MIN_SCALE, MARKER_FAR = 0.35, 1000  # 가장 작은 배율 (모자 그림 크기 기준), 이 거리부터 가장 작음
+MARKER_ARROW_SCALE, MARKER_ARROW_GAP = 0.5, 4   # 화살표 배율, 모자와의 간격(px)
 MARKER_BLINK_DIST, MARKER_BLINK_TIME = 200, 0.15    # 이 거리 이하면 깜빡임, 깜빡이는 간격(초)
 FRAME_STRIP_W = 27                    # 테두리 덮개 폭
 FRAME_STRIP_BOTTOM, FRAME_STRIP_TOP = 100, 820      # 테두리 덮개 위아래
+FRAME_TOP_LINE = 807                  # 플레이 칸 위 테두리 선 아래 끝 (선은 807 ~ 810, 하늘이 덮으므로 다시 그림)
